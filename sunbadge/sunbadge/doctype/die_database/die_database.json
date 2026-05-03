@@ -1,0 +1,349 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:die_number",
+ "creation": "2026-04-21 03:58:22.096218",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_lfa5",
+  "die_number",
+  "die_id",
+  "die_request",
+  "column_break_dzto",
+  "department",
+  "die_characteristics_1_section",
+  "characteristics",
+  "other_details_for_die_characteristics_1_section",
+  "small_text_thab",
+  "die_characteristics_2_section",
+  "characteristics_2",
+  "other_details_for_die_characteristics_2_section",
+  "small_text_ommr",
+  "item_included_with_work_order_section",
+  "artwork",
+  "other_description",
+  "column_break_xlsv",
+  "parts",
+  "photos",
+  "description_for_new_die_section",
+  "description",
+  "approvals_section",
+  "die_cutter_check_die_pre_heat_treating",
+  "shop_supervisor_check_die_and_enamel_one_stamping",
+  "column_break_ziqg",
+  "inspector_check_enamel_stamping",
+  "office_approve_die",
+  "die_description_tab",
+  "diedes1_section",
+  "des1",
+  "diedes2_section",
+  "des2",
+  "diedes3_section",
+  "des3",
+  "diedes4_section",
+  "des4",
+  "diedes5_section",
+  "des5",
+  "diedes6_section",
+  "des6",
+  "amended_from",
+  "data_xzku",
+  "data_sogm",
+  "data_gffu"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_lfa5",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Die Database",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "die_number",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Die Number",
+   "unique": 1
+  },
+  {
+   "fieldname": "die_id",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Die ID"
+  },
+  {
+   "fieldname": "die_characteristics_1_section",
+   "fieldtype": "Section Break",
+   "label": "Die Characteristics 1"
+  },
+  {
+   "fieldname": "die_request",
+   "fieldtype": "Link",
+   "label": "Die Request",
+   "options": "Die Request"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "other_details_for_die_characteristics_1_section",
+   "fieldtype": "Section Break",
+   "label": "Other Details for Die Characteristics 1"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "small_text_thab",
+   "fieldtype": "Small Text",
+   "options": "Die request"
+  },
+  {
+   "fieldname": "die_characteristics_2_section",
+   "fieldtype": "Section Break",
+   "label": "Die Characteristics 2"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "other_details_for_die_characteristics_2_section",
+   "fieldtype": "Section Break",
+   "label": "Other Details for Die Characteristics 2"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "small_text_ommr",
+   "fieldtype": "Small Text"
+  },
+  {
+   "fieldname": "item_included_with_work_order_section",
+   "fieldtype": "Section Break",
+   "label": "Item Included with Work Order"
+  },
+  {
+   "fetch_from": "die_request.artwork",
+   "fetch_if_empty": 1,
+   "fieldname": "artwork",
+   "fieldtype": "Data",
+   "label": "Artwork"
+  },
+  {
+   "fetch_from": "die_request.other_description",
+   "fetch_if_empty": 1,
+   "fieldname": "other_description",
+   "fieldtype": "Small Text",
+   "label": "Other Description"
+  },
+  {
+   "fieldname": "column_break_xlsv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "die_request.parts",
+   "fetch_if_empty": 1,
+   "fieldname": "parts",
+   "fieldtype": "Data",
+   "label": "Parts"
+  },
+  {
+   "fetch_from": "die_request.photos",
+   "fetch_if_empty": 1,
+   "fieldname": "photos",
+   "fieldtype": "Attach Image",
+   "label": "Photos"
+  },
+  {
+   "fieldname": "description_for_new_die_section",
+   "fieldtype": "Section Break",
+   "label": "Description for New Die"
+  },
+  {
+   "fetch_from": "die_request.text_editor_biqm",
+   "fetch_if_empty": 1,
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "fieldname": "approvals_section",
+   "fieldtype": "Section Break",
+   "label": "Approvals"
+  },
+  {
+   "default": "0",
+   "fetch_from": "die_request.die_cutter_check_die_pre_heat_treating",
+   "fetch_if_empty": 1,
+   "fieldname": "die_cutter_check_die_pre_heat_treating",
+   "fieldtype": "Check",
+   "label": " Die Cutter (Check Die Pre Heat Treating)"
+  },
+  {
+   "default": "0",
+   "fetch_from": "die_request.shop_supervisor_check_die_and_enamel_one_stamping",
+   "fetch_if_empty": 1,
+   "fieldname": "shop_supervisor_check_die_and_enamel_one_stamping",
+   "fieldtype": "Check",
+   "label": " Shop Supervisor (Check Die and Enamel one Stamping)"
+  },
+  {
+   "fieldname": "column_break_ziqg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fetch_from": "die_request.inspector_check_enamel_stamping",
+   "fetch_if_empty": 1,
+   "fieldname": "inspector_check_enamel_stamping",
+   "fieldtype": "Check",
+   "label": "Inspector (Check Enamel Stamping)"
+  },
+  {
+   "default": "0",
+   "fetch_from": "die_request.office_approve_die",
+   "fetch_if_empty": 1,
+   "fieldname": "office_approve_die",
+   "fieldtype": "Check",
+   "label": "Office (Approve Die)"
+  },
+  {
+   "fieldname": "die_description_tab",
+   "fieldtype": "Tab Break",
+   "hidden": 1,
+   "label": "Die Description"
+  },
+  {
+   "fieldname": "diedes1_section",
+   "fieldtype": "Section Break",
+   "label": "DIEDES1"
+  },
+  {
+   "fieldname": "des1",
+   "fieldtype": "Small Text",
+   "label": "DES1"
+  },
+  {
+   "fieldname": "diedes2_section",
+   "fieldtype": "Section Break",
+   "label": "DIEDES2"
+  },
+  {
+   "fieldname": "des2",
+   "fieldtype": "Small Text",
+   "label": "DES2"
+  },
+  {
+   "fieldname": "diedes3_section",
+   "fieldtype": "Section Break",
+   "label": "DIEDES3"
+  },
+  {
+   "fieldname": "des3",
+   "fieldtype": "Small Text",
+   "label": "DES3"
+  },
+  {
+   "fieldname": "diedes4_section",
+   "fieldtype": "Section Break",
+   "label": "DIEDES4"
+  },
+  {
+   "fieldname": "des4",
+   "fieldtype": "Small Text",
+   "label": "DES4"
+  },
+  {
+   "fieldname": "diedes5_section",
+   "fieldtype": "Section Break",
+   "label": "DIEDES5"
+  },
+  {
+   "fieldname": "des5",
+   "fieldtype": "Small Text",
+   "label": "DES5"
+  },
+  {
+   "fieldname": "diedes6_section",
+   "fieldtype": "Section Break",
+   "label": "DIEDES6"
+  },
+  {
+   "fieldname": "des6",
+   "fieldtype": "Small Text",
+   "label": "DES6"
+  },
+  {
+   "fieldname": "column_break_dzto",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "characteristics",
+   "fieldtype": "Table MultiSelect",
+   "label": "Characteristics 1",
+   "options": "Die characteristics- 1"
+  },
+  {
+   "fieldname": "characteristics_2",
+   "fieldtype": "Table MultiSelect",
+   "label": "Characteristics 2",
+   "options": "Die Characteristics-2"
+  },
+  {
+   "fetch_from": "die_request.department_name",
+   "fieldname": "department",
+   "fieldtype": "Data",
+   "label": "Department",
+   "options": "Die Request"
+  },
+  {
+   "fieldname": "data_xzku",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "data_sogm",
+   "fieldtype": "Data"
+  },
+  {
+   "fieldname": "data_gffu",
+   "fieldtype": "Data"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-04-27 23:28:31.928131",
+ "modified_by": "Administrator",
+ "module": "Sunbadge",
+ "name": "Die Database",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

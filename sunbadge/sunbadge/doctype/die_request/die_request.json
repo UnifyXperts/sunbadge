@@ -1,37 +1,190 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "DR.###",
  "creation": "2026-04-20 22:30:14.526133",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "workflow_state",
   "section_break_lzge",
-  "amended_from"
+  "department_name",
+  "die_characteristics_1_section",
+  "characteristic_details",
+  "other_details",
+  "die_characteristics_2_section",
+  "characteristic_details_2",
+  "other",
+  "items_included_with_work_order_section",
+  "artwork",
+  "other_description",
+  "column_break_efhk",
+  "parts",
+  "photos",
+  "description_for_new_die_section",
+  "text_editor_biqm",
+  "amended_from",
+  "approvals_section",
+  "die_cutter_check_die_pre_heat_treating",
+  "shop_supervisor_check_die_and_enamel_one_stamping",
+  "column_break_oneo",
+  "inspector_check_enamel_stamping",
+  "office_approve_die"
  ],
  "fields": [
   {
    "fieldname": "section_break_lzge",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Department"
   },
   {
    "fieldname": "amended_from",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Amended From",
    "no_copy": 1,
    "options": "Die Request",
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "die_characteristics_1_section",
+   "fieldtype": "Section Break",
+   "label": "Die Characteristics 1"
+  },
+  {
+   "fieldname": "die_characteristics_2_section",
+   "fieldtype": "Section Break",
+   "label": "Die Characteristics 2"
+  },
+  {
+   "fieldname": "other",
+   "fieldtype": "Small Text",
+   "label": "Other"
+  },
+  {
+   "fieldname": "items_included_with_work_order_section",
+   "fieldtype": "Section Break",
+   "label": "Items Included with Work Order"
+  },
+  {
+   "fieldname": "artwork",
+   "fieldtype": "Data",
+   "label": "Artwork"
+  },
+  {
+   "fieldname": "other_description",
+   "fieldtype": "Small Text",
+   "label": "Other Description"
+  },
+  {
+   "fieldname": "column_break_efhk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "parts",
+   "fieldtype": "Data",
+   "label": "Parts"
+  },
+  {
+   "fieldname": "photos",
+   "fieldtype": "Attach Image",
+   "label": "Photos"
+  },
+  {
+   "fieldname": "description_for_new_die_section",
+   "fieldtype": "Section Break",
+   "label": "Description for New Die"
+  },
+  {
+   "fieldname": "text_editor_biqm",
+   "fieldtype": "Text Editor",
+   "label": "Description"
+  },
+  {
+   "fieldname": "department_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Department Name",
+   "no_copy": 1,
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "die_cutter_check_die_pre_heat_treating",
+   "fieldtype": "Check",
+   "label": "Die Cutter (Check Die Pre Heat Treating)"
+  },
+  {
+   "default": "0",
+   "fieldname": "shop_supervisor_check_die_and_enamel_one_stamping",
+   "fieldtype": "Check",
+   "label": "Shop Supervisor (Check Die and Enamel one Stamping)"
+  },
+  {
+   "default": "0",
+   "fieldname": "inspector_check_enamel_stamping",
+   "fieldtype": "Check",
+   "label": "Inspector (Check Enamel Stamping) "
+  },
+  {
+   "default": "0",
+   "fieldname": "office_approve_die",
+   "fieldtype": "Check",
+   "label": "Office (Approve Die)"
+  },
+  {
+   "fieldname": "characteristic_details",
+   "fieldtype": "Table MultiSelect",
+   "label": "Characteristics 1",
+   "options": "Die characteristics- 1"
+  },
+  {
+   "fieldname": "other_details",
+   "fieldtype": "Small Text",
+   "label": "Other Details"
+  },
+  {
+   "fieldname": "approvals_section",
+   "fieldtype": "Section Break",
+   "label": "Approvals"
+  },
+  {
+   "fieldname": "column_break_oneo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Workflow State",
+   "no_copy": 1,
+   "options": "Workflow State"
+  },
+  {
+   "fieldname": "characteristic_details_2",
+   "fieldtype": "Table MultiSelect",
+   "label": "Characteristics 2",
+   "options": "Die Characteristics-2"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-04-20 22:30:14.526133",
+ "links": [
+  {
+   "link_doctype": "Die Database",
+   "link_fieldname": "die_request"
+  }
+ ],
+ "modified": "2026-04-27 03:36:50.553496",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Die Request",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {
@@ -52,5 +205,26 @@
  "rows_threshold_for_grid_search": 20,
  "sort_field": "creation",
  "sort_order": "DESC",
- "states": []
+ "states": [
+  {
+   "color": "Orange",
+   "title": "Draft"
+  },
+  {
+   "color": "Blue",
+   "title": "Pending For Approval"
+  },
+  {
+   "color": "Green",
+   "title": "Approved"
+  },
+  {
+   "color": "Pink",
+   "title": "Rejected"
+  },
+  {
+   "color": "Red",
+   "title": "Cancelled"
+  }
+ ]
 }

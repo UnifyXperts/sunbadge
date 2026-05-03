@@ -1,0 +1,292 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-04-29 03:24:14.351116",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "delivery_date",
+  "quantity",
+  "item_description",
+  "internal_description",
+  "bom_no",
+  "section_break_fpxs",
+  "image",
+  "image_view",
+  "section_break_bcdf",
+  "die_no1",
+  "column_break_phkx",
+  "die_des1",
+  "section_break_dfuk",
+  "die_no2",
+  "column_break_xusr",
+  "die_des2",
+  "section_break_ltxe",
+  "die_no_3",
+  "column_break_zyqj",
+  "die_des3",
+  "section_break_ywkl",
+  "die_no4",
+  "column_break_wxjr",
+  "die_des4",
+  "section_break_rvtt",
+  "die_no_5",
+  "column_break_gsbz",
+  "die_des5",
+  "section_break_jvwc",
+  "die_no_6",
+  "column_break_zsqa",
+  "die_des6",
+  "section_break_rtkm",
+  "die_no_7",
+  "column_break_mtip",
+  "die_des7",
+  "section_break_ejml",
+  "die_no_8",
+  "column_break_ktsc",
+  "die_des8"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "options": "Item"
+  },
+  {
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Delivery Date"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Quantity"
+  },
+  {
+   "fieldname": "item_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Description"
+  },
+  {
+   "fieldname": "internal_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Internal Description"
+  },
+  {
+   "fieldname": "bom_no",
+   "fieldtype": "Link",
+   "label": "BOM No.",
+   "options": "BOM"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image"
+  },
+  {
+   "fieldname": "section_break_bcdf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_no1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die No.1"
+  },
+  {
+   "fieldname": "column_break_phkx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES1"
+  },
+  {
+   "fieldname": "section_break_dfuk",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_no2",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die No.2"
+  },
+  {
+   "fieldname": "column_break_xusr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des2",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES2"
+  },
+  {
+   "fieldname": "section_break_ltxe",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_no_3",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die No. 3"
+  },
+  {
+   "fieldname": "column_break_zyqj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des3",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES3"
+  },
+  {
+   "fieldname": "section_break_ywkl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "die_no4",
+   "fieldtype": "Data",
+   "label": "Die No.4"
+  },
+  {
+   "fieldname": "column_break_wxjr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des4",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES4"
+  },
+  {
+   "fieldname": "section_break_rvtt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "die_no_5",
+   "fieldtype": "Data",
+   "label": "Die No. 5"
+  },
+  {
+   "fieldname": "column_break_gsbz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des5",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES5"
+  },
+  {
+   "fieldname": "section_break_jvwc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_no_6",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die No. 6"
+  },
+  {
+   "fieldname": "column_break_zsqa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des6",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES6"
+  },
+  {
+   "fieldname": "section_break_rtkm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_no_7",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die No. 7"
+  },
+  {
+   "fieldname": "column_break_mtip",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des7",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES7"
+  },
+  {
+   "fieldname": "section_break_ejml",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_no_8",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die No. 8"
+  },
+  {
+   "fieldname": "column_break_ktsc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_if_empty": 1,
+   "fieldname": "die_des8",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Die DES8"
+  },
+  {
+   "fieldname": "section_break_fpxs",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "image_view",
+   "fieldtype": "Image",
+   "label": "Image View",
+   "options": "Image"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-04-29 03:52:38.234244",
+ "modified_by": "Administrator",
+ "module": "Sunbadge",
+ "name": "Traveler Item Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
