@@ -3,8 +3,7 @@ import frappe
 
 
 def auto_manufacture_from_traveler(doc, method=None):
-    
-    
+
     items = doc.get("item") or []
 
     if not items:
@@ -17,7 +16,7 @@ def auto_manufacture_from_traveler(doc, method=None):
         bom = item.get("bom_no")
 
         # -----------------------------
-        # ✅ VALIDATIONS
+        # VALIDATIONS
         # -----------------------------
         if not bom:
             frappe.throw(f"BOM missing for item {item_code}")
@@ -26,23 +25,29 @@ def auto_manufacture_from_traveler(doc, method=None):
             frappe.throw(f"Invalid quantity for item {item_code}")
 
         # -----------------------------
-        # ✅ PREVENT DUPLICATE WORK ORDER
+        # SKIP if already linked (important)
         # -----------------------------
-        existing_wo = frappe.db.exists(
+        if item.get("work_order"):
+            continue
+
+        # -----------------------------
+        # CHECK EXISTING WO (row-level safe)
+        # -----------------------------
+        existing_wo = frappe.db.get_value(
             "Work Order",
             {
                 "production_item": item_code,
                 "sales_order": doc.sales_order,
                 "docstatus": 1
-            }
+            },
+            "name"
         )
 
         if existing_wo:
-            frappe.msgprint(f"Work Order already exists: {existing_wo}")
             wo_name = existing_wo
         else:
             # -----------------------------
-            # ✅ GET WAREHOUSES
+            # GET FG WAREHOUSE
             # -----------------------------
             fg_warehouse = frappe.db.get_value(
                 "Item Default",
@@ -53,11 +58,8 @@ def auto_manufacture_from_traveler(doc, method=None):
             if not fg_warehouse:
                 frappe.throw(f"No FG warehouse set for item {item_code}")
 
-            source_warehouse = "Stores - SBC"
-            wip_warehouse = "Work In Progress - SBC"
-
             # -----------------------------
-            # ✅ CREATE WORK ORDER
+            # CREATE WORK ORDER
             # -----------------------------
             wo = frappe.new_doc("Work Order")
             wo.production_item = item_code
@@ -66,11 +68,10 @@ def auto_manufacture_from_traveler(doc, method=None):
             wo.bom_no = bom
 
             wo.fg_warehouse = fg_warehouse
-            wo.source_warehouse = source_warehouse
-            wo.wip_warehouse = wip_warehouse
+            wo.source_warehouse = "Stores - SBC"
+            wo.wip_warehouse = "Work In Progress - SBC"
 
             wo.skip_transfer = 1
-
             wo.sales_order = doc.sales_order
             wo.customer = doc.customer
 
@@ -78,6 +79,23 @@ def auto_manufacture_from_traveler(doc, method=None):
             wo.submit()
 
             wo_name = wo.name
+
+        # -----------------------------
+        # ATTACH WO TO ITEM ROW
+        # -----------------------------
+        if doc.docstatus == 1:
+            # if running on submit
+            frappe.db.set_value(
+                item.doctype,
+                item.name,
+                "work_order",
+                wo_name
+            )
+        else:
+            # before save / validate
+            item.work_order = wo_name
+
+
 
 @frappe.whitelist()
 def auto_create_stockentry(doc):
@@ -114,8 +132,8 @@ def auto_create_stockentry(doc):
     )
 
     if existing_se:
-        frappe.msgprint(f"Already manufactured: {existing_se}")
-        continue
+        frappe.throw(f"Already manufactured: {existing_se}")
+        
 
     
     try:

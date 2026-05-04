@@ -21,6 +21,7 @@
   "po_no",
   "amended_from",
   "sales_order",
+  "work_order",
   "items_section",
   "item",
   "section_break_31",
@@ -421,6 +422,12 @@
    "label": "Sales Order",
    "options": "Sales Order",
    "read_only": 1
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "options": "Work Order"
   }
  ],
  "grid_page_length": 50,
@@ -428,7 +435,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-29 04:35:31.478608",
+ "modified": "2026-05-03 20:47:03.688480",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",
