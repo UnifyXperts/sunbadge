@@ -13,9 +13,9 @@ IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
 
 
 
-class IntegrationTestDiecharacteristics2(IntegrationTestCase):
+class IntegrationTestDieCharacteristics2(IntegrationTestCase):
 	"""
-	Integration tests for Diecharacteristics2.
+	Integration tests for DieCharacteristics2.
 	Use this class for testing interactions between multiple components.
 	"""
 
