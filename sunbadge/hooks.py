@@ -132,6 +132,8 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
+fixtures=["Order Status"]
+
 doc_events = {
 	"Traveler": {
 		"on_submit": "sunbadge.sunbadge.api.api.auto_manufacture_from_traveler",
