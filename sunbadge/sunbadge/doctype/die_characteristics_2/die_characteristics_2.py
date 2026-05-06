@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class DieCharacteristics2(Document):
+class Diecharacteristics2(Document):
 	pass

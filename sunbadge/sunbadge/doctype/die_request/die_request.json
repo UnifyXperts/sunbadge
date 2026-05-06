@@ -168,7 +168,7 @@
    "fieldname": "characteristic_details_2",
    "fieldtype": "Table MultiSelect",
    "label": "Characteristics 2",
-   "options": "Die Characteristics-2"
+   "options": "Die characteristics-2"
   }
  ],
  "grid_page_length": 50,
@@ -180,7 +180,7 @@
    "link_fieldname": "die_request"
   }
  ],
- "modified": "2026-04-27 03:36:50.553496",
+ "modified": "2026-05-05 21:59:09.333298",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Die Request",
