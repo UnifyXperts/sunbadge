@@ -336,6 +336,7 @@ def create_sales_invoice(traveler_name):
 
     # Optional: link traveler
     si.custom_traveler = traveler.name
+    si.update_stock=1
 
     si.flags.ignore_permissions = True
     si.insert()
