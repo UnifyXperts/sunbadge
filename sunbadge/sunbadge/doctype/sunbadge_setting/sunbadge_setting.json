@@ -1,0 +1,53 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-03 22:47:02.058948",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "status_to_complete_work_order",
+  "status_to_create_sales_invoice"
+ ],
+ "fields": [
+  {
+   "default": "260 - SHIPPING",
+   "fieldname": "status_to_complete_work_order",
+   "fieldtype": "Select",
+   "label": "Status to Complete Work Order",
+   "options": "10 - NEW ORDERS\n20 - WAITING FOR DIES\n30 - STOCKROOM/SHOP\n40 - HAND STAMPING\n50 - HAND SAWING\n60 - SOLDERING\n70 - ENAMELING\n80 - ENAMEL GRINDING\n90 - PUMICING\n100 - WAITING FOR SEALS\n110 - REPAIR\n120 - POLISHING\n130 - REWORKS/BACKORDERS\n140 - ENGRAVING\n150 - FINAL INSPECTION\n160 - O.P. OTHER\n170 - SCRAP\n180 - O.P. ENGRAVING\n190 - O.P. LUCITE\n200 - O.P. CHROME\n210 - O.P. TRIM DIES\n220 - O.P. HEAT TREAT\n230 - O.P. LEATHER PRODUCTS\n240 - O.P. OFF SHORE\n250 - O.P. RAW MATERIALS\n260 - SHIPPING\n270 - WILL CALL\n280 - ORDERS SHIPPED"
+  },
+  {
+   "default": "280 - ORDERS SHIPPED",
+   "fieldname": "status_to_create_sales_invoice",
+   "fieldtype": "Select",
+   "label": "Status to Create Sales Invoice",
+   "options": "10 - NEW ORDERS\n20 - WAITING FOR DIES\n30 - STOCKROOM/SHOP\n40 - HAND STAMPING\n50 - HAND SAWING\n60 - SOLDERING\n70 - ENAMELING\n80 - ENAMEL GRINDING\n90 - PUMICING\n100 - WAITING FOR SEALS\n110 - REPAIR\n120 - POLISHING\n130 - REWORKS/BACKORDERS\n140 - ENGRAVING\n150 - FINAL INSPECTION\n160 - O.P. OTHER\n170 - SCRAP\n180 - O.P. ENGRAVING\n190 - O.P. LUCITE\n200 - O.P. CHROME\n210 - O.P. TRIM DIES\n220 - O.P. HEAT TREAT\n230 - O.P. LEATHER PRODUCTS\n240 - O.P. OFF SHORE\n250 - O.P. RAW MATERIALS\n260 - SHIPPING\n270 - WILL CALL\n280 - ORDERS SHIPPED"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-03 22:52:16.098307",
+ "modified_by": "Administrator",
+ "module": "Sunbadge",
+ "name": "Sunbadge Setting",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
