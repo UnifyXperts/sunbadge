@@ -110,16 +110,16 @@ def auto_manufacture_from_traveler(doc, method=None):
         wo.wip_warehouse = wip_warehouse
 
         wo.insert()
-            wo.skip_transfer = 1
-            wo.sales_order = doc.sales_order
-            wo.customer = doc.customer
+        wo.skip_transfer = 1
+        wo.sales_order = doc.sales_order
+        wo.customer = doc.customer
 
-            wo.custom_traveler=doc.name
-            
-            wo.insert(ignore_permissions=True)
-            wo.submit()
+        wo.custom_traveler=doc.name
+        
+        wo.insert(ignore_permissions=True)
+        wo.submit()
 
-            wo_name = wo.name
+        wo_name = wo.name
 
         # -----------------------------
         # ATTACH WO TO ITEM ROW
