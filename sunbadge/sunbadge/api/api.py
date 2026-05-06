@@ -1,5 +1,7 @@
 from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 import frappe
+from frappe import _
+
 
 
 def auto_manufacture_from_traveler(doc, method=None):
@@ -45,36 +47,75 @@ def auto_manufacture_from_traveler(doc, method=None):
 
         if existing_wo:
             wo_name = existing_wo
-        else:
-            # -----------------------------
-            # GET FG WAREHOUSE
-            # -----------------------------
-            fg_warehouse = frappe.db.get_value(
-                "Item Default",
-                {"parent": item_code, "company": doc.company},
-                "default_warehouse"
+        # -----------------------------
+        # FG WAREHOUSE (Company)
+        # -----------------------------
+        
+        fg_warehouse = frappe.db.get_value(
+            "Company",
+            doc.company,
+            "default_finished_goods_warehouse"
+        )
+
+        if not fg_warehouse:
+            frappe.throw("Default Finished Goods Warehouse not set in Company")
+
+        # -----------------------------
+        # WIP WAREHOUSE (Company)
+        # -----------------------------
+        wip_warehouse = frappe.db.get_value(
+            "Company",
+            doc.company,
+            "default_wip_warehouse"
+        )
+
+        if not wip_warehouse:
+            frappe.throw("Default WIP Warehouse not set in Company")
+
+        # -----------------------------
+        # SOURCE WAREHOUSE (Priority Based)
+        # -----------------------------
+        source_warehouse = frappe.db.get_value(
+            "Item Default",
+            {"parent": item_code, "company": doc.company},
+            "default_warehouse"
+        )
+
+        # fallback → BOM
+        if not source_warehouse and bom:
+            source_warehouse = frappe.db.get_value(
+                "BOM",
+                bom,
+                "source_warehouse"
             )
 
-            if not fg_warehouse:
-                frappe.throw(f"No FG warehouse set for item {item_code}")
+        # fallback → User Session Default
+        if not source_warehouse:
+            source_warehouse = frappe.defaults.get_user_default("warehouse")
 
-            # -----------------------------
-            # CREATE WORK ORDER
-            # -----------------------------
-            wo = frappe.new_doc("Work Order")
-            wo.production_item = item_code
-            wo.qty = qty
-            wo.company = doc.company
-            wo.bom_no = bom
+        if not source_warehouse:
+            frappe.throw(f"No source warehouse found for item {item_code}")
 
-            wo.fg_warehouse = fg_warehouse
-            wo.source_warehouse = "Stores - SBC"
-            wo.wip_warehouse = "Work In Progress - SBC"
+        # -----------------------------
+        # CREATE WORK ORDER
+        # -----------------------------
+        wo = frappe.new_doc("Work Order")
+        wo.production_item = item_code
+        wo.qty = qty
+        wo.company = doc.company
+        wo.bom_no = bom
 
+        wo.fg_warehouse = fg_warehouse
+        wo.source_warehouse = source_warehouse
+        wo.wip_warehouse = wip_warehouse
+
+        wo.insert()
             wo.skip_transfer = 1
             wo.sales_order = doc.sales_order
             wo.customer = doc.customer
 
+            wo.custom_traveler=doc.name
+            
             wo.insert(ignore_permissions=True)
             wo.submit()
 
@@ -96,74 +137,363 @@ def auto_manufacture_from_traveler(doc, method=None):
             item.work_order = wo_name
 
 
-
 @frappe.whitelist()
-def auto_create_stockentry(doc):
+def auto_create_stockentry(traveler_name):
 
+    doc = frappe.get_doc("Traveler", traveler_name)
 
-    required_items = frappe.get_all(
-        "BOM Item",
-        filters={"parent": bom},
-        fields=["item_code", "qty"]
-    )
+    items = doc.get("item") or []
 
-    for rm in required_items:
-        required_qty = rm.qty * qty
+    if not items:
+        frappe.throw("No items found in Traveler")
 
-        available_qty = frappe.db.get_value(
-            "Bin",
-            {"item_code": rm.item_code, "warehouse": "Stores - SBC"},
-            "actual_qty"
-        ) or 0
+    for item in items:
 
-        if available_qty < required_qty:
-            frappe.throw(
-                f"Not enough stock for {rm.item_code}. Required: {required_qty}, Available: {available_qty}"
+        wo_name = item.get("work_order")
+        qty = item.get("quantity") or item.get("qty")
+
+        if not wo_name:
+            frappe.throw(f"Work Order not found for item {item.item_code}")
+
+        # -----------------------------
+        # PREVENT DUPLICATE MANUFACTURE
+        # -----------------------------
+        existing_se = frappe.db.exists(
+            "Stock Entry",
+            {
+                "work_order": wo_name,
+                "docstatus": 1,
+                "stock_entry_type": "Manufacture"
+            }
+        )
+
+        if existing_se:
+            frappe.msgprint(f"Already manufactured for WO {wo_name}: {existing_se}")
+            continue
+
+        try:
+            # -----------------------------
+            # CREATE STOCK ENTRY USING ERPNext LOGIC
+            # -----------------------------
+            se_dict = make_stock_entry(
+                work_order_id=wo_name,
+                purpose="Manufacture",
+                qty=qty
             )
 
+            se = frappe.get_doc(se_dict)
 
-    existing_se = frappe.db.exists(
-        "Stock Entry",
-        {
-            "work_order": wo_name,
-            "docstatus": 1,
-            "stock_entry_type": "Manufacture"
-        }
+            # (Optional) let ERP handle validations — safer
+            # remove ignore flags unless absolutely required
+            # se.flags.ignore_permissions = True
+
+            se.insert()
+            se.submit()
+
+            # -----------------------------
+            # LINK STOCK ENTRY TO ITEM ROW
+            # -----------------------------
+            frappe.db.set_value(
+                item.doctype,
+                item.name,
+                "stock_entry",
+                se.name
+            )
+
+            frappe.msgprint(f"✅ Stock Entry Created: {se.name}")
+
+        except Exception as e:
+            frappe.throw(f"Error for WO {wo_name}: {str(e)}")
+            
+
+@frappe.whitelist()
+def reset_work_orders(traveler_name):
+
+    doc = frappe.get_doc("Traveler", traveler_name)
+    items = doc.get("item") or []
+
+    if not items:
+        frappe.throw("No items found in Traveler")
+
+    # ---------------------------------------
+    # STEP 1: COLLECT ALL STOCK ENTRIES
+    # ---------------------------------------
+    all_stock_entries = []
+
+    for item in items:
+        wo_name = item.get("work_order")
+        if not wo_name:
+            continue
+
+        stock_entries = frappe.get_all(
+            "Stock Entry",
+            filters={"work_order": wo_name},
+            fields=["name", "docstatus", "stock_entry_type"]
+        )
+        all_stock_entries.extend(stock_entries)
+
+    # ---------------------------------------
+    # STEP 2: REMOVE LINK FROM TRAVELER (DB-LEVEL, WORKS ON SUBMITTED DOC)
+    # ---------------------------------------
+    for item in items:
+        frappe.db.set_value(
+            item.doctype,
+            item.name,
+            {
+                "stock_entry": None,
+                # "work_order_status": "Not Started"
+            }
+        )
+
+    # ---------------------------------------
+    # STEP 3: CANCEL + DELETE STOCK ENTRIES
+    # ---------------------------------------
+    # cancel Manufacture first, then others
+    stock_entries_sorted = sorted(
+        all_stock_entries,
+        key=lambda x: 0 if x.stock_entry_type == "Manufacture" else 1
     )
 
-    if existing_se:
-        frappe.throw(f"Already manufactured: {existing_se}")
-        
+    for se in stock_entries_sorted:
+        se_doc = frappe.get_doc("Stock Entry", se.name)
 
+        if se_doc.docstatus == 1:
+            se_doc.cancel()
+
+        frappe.delete_doc("Stock Entry", se.name, force=1)
+
+    # ---------------------------------------
+    # STEP 4: RESET WORK ORDERS
+    # ---------------------------------------
+    # (use unique WO list to avoid duplicate fetch)
+    wo_names = {item.get("work_order") for item in items if item.get("work_order")}
+
+    for wo_name in wo_names:
+        wo_doc = frappe.get_doc("Work Order", wo_name)
+
+        wo_doc.db_set("produced_qty", 0)
+        wo_doc.db_set("material_transferred_for_manufacturing", 0)
+        # wo_doc.db_set("completed_qty", 0)
+        wo_doc.db_set("status", "Not Started")
+
+    frappe.msgprint("✅ Stock unallocated and Work Orders reset successfully")
     
-    try:
-        make_se = frappe.get_attr(
-            "erpnext.manufacturing.doctype.work_order.work_order.make_stock_entry"
+
+@frappe.whitelist()
+def create_sales_invoice(traveler_name):
+    traveler = frappe.get_doc("Traveler", traveler_name)
+
+    if not traveler.customer:
+        frappe.throw("Customer is required")
+
+    if not traveler.sales_order:
+        frappe.throw("Sales Order is required in Traveler")
+
+
+    so = frappe.get_doc("Sales Order", traveler.sales_order)
+
+
+    default_cc = frappe.get_cached_value("Company", so.company, "cost_center")
+    
+
+    if not default_cc:
+        frappe.throw(f"Default Cost Center not set in Company {so.company}")
+
+    # Map item_code -> rate from SO
+    so_item_map = {d.item_code: d for d in so.items}
+
+    # -----------------------------
+    # CREATE SALES INVOICE
+    # -----------------------------
+    si = frappe.new_doc("Sales Invoice")
+    si.customer = traveler.customer
+    si.posting_date = frappe.utils.today()
+    si.company = so.company
+
+    # ✅ SET COST CENTER AT HEADER LEVEL
+    si.cost_center = default_cc
+
+    # -----------------------------
+    # ADD ITEMS FROM TRAVELER
+    # -----------------------------
+    for row in traveler.get("item") or []:
+
+        if row.item_code not in so_item_map:
+            frappe.throw(f"Item {row.item_code} not found in Sales Order")
+
+        so_item = so_item_map[row.item_code]
+        
+        
+        si.append("items", {
+            "item_code": row.item_code,
+            "qty": row.quantity,
+            "rate": so_item.rate,
+            "sales_order": so.name,
+            "so_detail": so_item.name,
+            "warehouse": so_item.warehouse,
+            "cost_center": default_cc
+        })
+
+    # Optional: link traveler
+    si.custom_traveler = traveler.name
+
+    si.flags.ignore_permissions = True
+    si.insert()
+    si.submit()
+
+    # -----------------------------
+    # SAVE LINK
+    # -----------------------------
+    traveler.db_set("sales_invoice", si.name)
+
+    return {
+        "status": "success",
+        "sales_invoice": si.name
+    }
+
+@frappe.whitelist()
+def cancel_sales_invoice(traveler_name):
+    traveler = frappe.get_doc("Traveler", traveler_name)
+
+    if not traveler.sales_invoice:
+        frappe.throw("No Sales Invoice linked")
+
+    si_name = traveler.sales_invoice
+
+    # -----------------------------
+    # STEP 1: REMOVE LINK FIRST
+    # -----------------------------
+    frappe.db.set_value("Traveler", traveler.name, "sales_invoice", "")
+    frappe.db.commit()   # 🔥 VERY IMPORTANT
+
+    # Reload to avoid stale reference
+    si = frappe.get_doc("Sales Invoice", si_name)
+
+    # -----------------------------
+    # STEP 2: CANCEL PAYMENT ENTRIES
+    # -----------------------------
+    payment_entries = frappe.get_all(
+        "Payment Entry Reference",
+        filters={
+            "reference_name": si.name,
+            "reference_doctype": "Sales Invoice"
+        },
+        fields=["parent"]
+    )
+
+    for pe in payment_entries:
+        pe_doc = frappe.get_doc("Payment Entry", pe.parent)
+
+        if pe_doc.docstatus == 1:
+            pe_doc.cancel()
+
+    # -----------------------------
+    # STEP 3: CANCEL SALES INVOICE
+    # -----------------------------
+    if si.docstatus == 1:
+        si.cancel()
+
+    # frappe.delete_doc("Sales Invoice", si.name, force=1)
+    
+    return {
+        "status": "success",
+        "message": f"Sales Invoice {si.name} cancelled"
+    }
+    
+@frappe.whitelist()
+def full_reset_traveler(traveler_name):
+    doc = frappe.get_doc("Traveler", traveler_name)
+    items = doc.get("item") or []
+
+    if not items:
+        frappe.throw("No items found")
+
+    # -----------------------------
+    # STEP 1: REMOVE SI LINK FIRST
+    # -----------------------------
+    si_name = doc.sales_invoice
+
+    if si_name:
+        frappe.db.set_value("Traveler", doc.name, "sales_invoice", "")
+        frappe.db.commit()
+
+    # -----------------------------
+    # STEP 2: HANDLE SALES INVOICE
+    # -----------------------------
+    if si_name:
+        si = frappe.get_doc("Sales Invoice", si_name)
+
+        # Cancel Payment Entries
+        payment_entries = frappe.get_all(
+            "Payment Entry Reference",
+            filters={
+                "reference_name": si.name,
+                "reference_doctype": "Sales Invoice"
+            },
+            fields=["parent"]
         )
 
-        se_dict = make_se(
-            work_order_id=wo_name,
-            purpose="Manufacture",
-            qty=qty
+        for pe in payment_entries:
+            pe_doc = frappe.get_doc("Payment Entry", pe.parent)
+            if pe_doc.docstatus == 1:
+                pe_doc.cancel()
+
+        # Cancel SI
+        if si.docstatus == 1:
+            si.cancel()
+
+        # Optional delete
+        frappe.delete_doc("Sales Invoice", si.name, force=1)
+
+    # -----------------------------
+    # STEP 3: COLLECT STOCK ENTRIES
+    # -----------------------------
+    stock_entries = []
+
+    for item in items:
+        if item.stock_entry:
+            stock_entries.append(item.stock_entry)
+
+    # Remove duplicates
+    stock_entries = list(set(stock_entries))
+
+    # -----------------------------
+    # STEP 4: REMOVE STOCK ENTRY LINK
+    # -----------------------------
+    for item in items:
+        frappe.db.set_value(
+            item.doctype,
+            item.name,
+            "stock_entry",
+            ""
         )
 
-        # convert dict → doc
-        se = frappe.get_doc(se_dict)
+    frappe.db.commit()
 
-        # IMPORTANT FLAGS
-        se.flags.ignore_permissions = True
-        se.flags.ignore_mandatory = True   # 🔥 IMPORTANT
-        se.flags.ignore_validate = True    # 🔥 IMPORTANT
+    # -----------------------------
+    # STEP 5: CANCEL + DELETE STOCK ENTRY
+    # -----------------------------
+    for se_name in stock_entries:
+        se = frappe.get_doc("Stock Entry", se_name)
 
-        # SAVE PROPERLY
-        se.insert(ignore_permissions=True)
+        if se.docstatus == 1:
+            se.cancel()
 
-        # reload to ensure name assigned
-        se.reload()
+        frappe.delete_doc("Stock Entry", se.name, force=1)
 
-        se.submit()
+    # -----------------------------
+    # STEP 6: RESET WORK ORDERS
+    # -----------------------------
+    wo_names = {item.work_order for item in items if item.work_order}
 
-        frappe.msgprint(f"✅ Stock Entry Created: {se.name}")
+    for wo_name in wo_names:
+        wo = frappe.get_doc("Work Order", wo_name)
 
-    except Exception as e:
-        frappe.throw(str(e))
+        wo.db_set("produced_qty", 0)
+        wo.db_set("material_transferred_for_manufacturing", 0)
+        wo.db_set("status", "Not Started")
+
+    return {
+        "status": "success",
+        "message": "Traveler fully reset (SI + SE cancelled & deleted)"
+    }

@@ -12,6 +12,8 @@
   "item_description",
   "internal_description",
   "bom_no",
+  "work_order",
+  "stock_entry",
   "section_break_fpxs",
   "image",
   "image_view",
@@ -272,13 +274,25 @@
    "fieldtype": "Image",
    "label": "Image View",
    "options": "Image"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "Work Order",
+   "options": "Work Order"
+  },
+  {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-29 03:52:38.234244",
+ "modified": "2026-05-03 22:18:13.727676",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler Item Table",

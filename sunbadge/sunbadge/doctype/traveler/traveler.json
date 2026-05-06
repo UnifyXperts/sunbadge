@@ -21,7 +21,9 @@
   "po_no",
   "amended_from",
   "sales_order",
+  "sales_invoice",
   "work_order",
+  "executed_status",
   "items_section",
   "item",
   "section_break_31",
@@ -428,14 +430,37 @@
    "fieldtype": "Link",
    "label": "Work Order",
    "options": "Work Order"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "executed_status",
+   "fieldtype": "Data",
+   "label": "Executed Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "links": [],
- "modified": "2026-05-03 20:47:03.688480",
+ "links": [
+  {
+   "link_doctype": "Work Order",
+   "link_fieldname": "custom_traveler"
+  },
+  {
+   "link_doctype": "Sales Invoice",
+   "link_fieldname": "custom_traveler"
+  }
+ ],
+ "modified": "2026-05-04 20:56:11.506938",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",
