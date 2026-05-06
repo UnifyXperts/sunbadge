@@ -14,7 +14,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Characteristics",
-   "options": "Die Characteristics 1"
+   "options": "Die Characteristics 2"
   }
  ],
  "grid_page_length": 50,
