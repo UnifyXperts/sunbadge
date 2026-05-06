@@ -293,7 +293,7 @@
    "fieldname": "characteristics_2",
    "fieldtype": "Table MultiSelect",
    "label": "Characteristics 2",
-   "options": "Die characteristics- 2"
+   "options": "Die Characteristics- 2"
   },
   {
    "fetch_from": "die_request.department_name",
@@ -319,7 +319,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-05 22:50:56.247518",
+ "modified": "2026-05-06 00:30:57.759623",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Die Database",
