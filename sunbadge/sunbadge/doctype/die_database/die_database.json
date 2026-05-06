@@ -100,6 +100,7 @@
    "label": "Other Details for Die Characteristics 1"
   },
   {
+   "fetch_from": "die_request.other_details",
    "fetch_if_empty": 1,
    "fieldname": "small_text_thab",
    "fieldtype": "Small Text",
@@ -117,6 +118,7 @@
    "label": "Other Details for Die Characteristics 2"
   },
   {
+   "fetch_from": "die_request.other",
    "fetch_if_empty": 1,
    "fieldname": "small_text_ommr",
    "fieldtype": "Small Text"
@@ -319,7 +321,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-06 00:30:57.759623",
+ "modified": "2026-05-06 03:35:29.249026",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Die Database",
