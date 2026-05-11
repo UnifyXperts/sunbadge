@@ -10,6 +10,10 @@ def auto_manufacture_from_traveler(doc, method=None):
 
     if not items:
         frappe.throw("No items found in Traveler")
+    
+    sales_order=frappe.get_doc("Sales Order",doc.sales_order)
+    
+    
 
     for item in items:
 
@@ -54,7 +58,7 @@ def auto_manufacture_from_traveler(doc, method=None):
         fg_warehouse = frappe.db.get_value(
             "Company",
             doc.company,
-            "default_finished_goods_warehouse"
+            "default_fg_warehouse"
         )
 
         if not fg_warehouse:
@@ -75,24 +79,8 @@ def auto_manufacture_from_traveler(doc, method=None):
         # -----------------------------
         # SOURCE WAREHOUSE (Priority Based)
         # -----------------------------
-        source_warehouse = frappe.db.get_value(
-            "Item Default",
-            {"parent": item_code, "company": doc.company},
-            "default_warehouse"
-        )
-
-        # fallback → BOM
-        if not source_warehouse and bom:
-            source_warehouse = frappe.db.get_value(
-                "BOM",
-                bom,
-                "source_warehouse"
-            )
-
-        # fallback → User Session Default
-        if not source_warehouse:
-            source_warehouse = frappe.defaults.get_user_default("warehouse")
-
+        source_warehouse=sales_order.set_warehouse
+        
         if not source_warehouse:
             frappe.throw(f"No source warehouse found for item {item_code}")
 
@@ -106,10 +94,9 @@ def auto_manufacture_from_traveler(doc, method=None):
         wo.bom_no = bom
 
         wo.fg_warehouse = fg_warehouse
-        wo.source_warehouse = source_warehouse
+        # wo.source_warehouse = source_warehouse
         wo.wip_warehouse = wip_warehouse
 
-        wo.insert()
         wo.skip_transfer = 1
         wo.sales_order = doc.sales_order
         wo.customer = doc.customer
@@ -292,14 +279,14 @@ def create_sales_invoice(traveler_name):
 
     so = frappe.get_doc("Sales Order", traveler.sales_order)
 
-
-    default_cc = frappe.get_cached_value("Company", so.company, "cost_center")
+    company_doc = frappe.get_doc("Company", so.company)
+    default_cc = company_doc.cost_center
+    
     
 
     if not default_cc:
         frappe.throw(f"Default Cost Center not set in Company {so.company}")
 
-    # Map item_code -> rate from SO
     so_item_map = {d.item_code: d for d in so.items}
 
     # -----------------------------
@@ -310,8 +297,10 @@ def create_sales_invoice(traveler_name):
     si.posting_date = frappe.utils.today()
     si.company = so.company
 
-    # ✅ SET COST CENTER AT HEADER LEVEL
     si.cost_center = default_cc
+    
+    
+
 
     # -----------------------------
     # ADD ITEMS FROM TRAVELER
@@ -333,12 +322,20 @@ def create_sales_invoice(traveler_name):
             "warehouse": so_item.warehouse,
             "cost_center": default_cc
         })
+    
+    for tax in so.taxes:
+        si.append("taxes", {
+            "charge_type": tax.charge_type,
+            "account_head": tax.account_head,
+            "description": tax.description,
+            "rate": tax.rate,
+            "cost_center": tax.cost_center or default_cc
+        })
 
     # Optional: link traveler
     si.custom_traveler = traveler.name
     si.update_stock=1
 
-    si.flags.ignore_permissions = True
     si.insert()
     si.submit()
 
@@ -370,23 +367,23 @@ def cancel_sales_invoice(traveler_name):
     # Reload to avoid stale reference
     si = frappe.get_doc("Sales Invoice", si_name)
 
-    # -----------------------------
-    # STEP 2: CANCEL PAYMENT ENTRIES
-    # -----------------------------
-    payment_entries = frappe.get_all(
-        "Payment Entry Reference",
-        filters={
-            "reference_name": si.name,
-            "reference_doctype": "Sales Invoice"
-        },
-        fields=["parent"]
-    )
+    # # -----------------------------
+    # # STEP 2: CANCEL PAYMENT ENTRIES
+    # # -----------------------------
+    # payment_entries = frappe.get_all(
+    #     "Payment Entry Reference",
+    #     filters={
+    #         "reference_name": si.name,
+    #         "reference_doctype": "Sales Invoice"
+    #     },
+    #     fields=["parent"]
+    # )
 
-    for pe in payment_entries:
-        pe_doc = frappe.get_doc("Payment Entry", pe.parent)
+    # for pe in payment_entries:
+    #     pe_doc = frappe.get_doc("Payment Entry", pe.parent)
 
-        if pe_doc.docstatus == 1:
-            pe_doc.cancel()
+    #     if pe_doc.docstatus == 1:
+    #         pe_doc.cancel()
 
     # -----------------------------
     # STEP 3: CANCEL SALES INVOICE
@@ -394,7 +391,7 @@ def cancel_sales_invoice(traveler_name):
     if si.docstatus == 1:
         si.cancel()
 
-    # frappe.delete_doc("Sales Invoice", si.name, force=1)
+    frappe.delete_doc("Sales Invoice", si.name, force=1)
     
     return {
         "status": "success",

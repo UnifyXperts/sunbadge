@@ -2,6 +2,7 @@
  "actions": [],
  "allow_auto_repeat": 1,
  "allow_import": 1,
+ "autoname": "TRA-.YYYY.-.MM.-.####",
  "creation": "2013-06-18 12:39:59",
  "doctype": "DocType",
  "document_type": "Document",
@@ -403,13 +404,13 @@
   {
    "allow_on_submit": 1,
    "fieldname": "order_status",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "hide_days": 1,
    "hide_seconds": 1,
    "label": "Order Status",
    "oldfieldname": "order_type",
    "oldfieldtype": "Select",
-   "options": "10 - NEW ORDERS\n20 - WAITING FOR DIES\n30 - STOCKROOM/SHOP\n40 - HAND STAMPING\n50 - HAND SAWING\n60 - SOLDERING\n70 - ENAMELING\n80 - ENAMEL GRINDING\n90 - PUMICING\n100 - WAITING FOR SEALS\n110 - REPAIR\n120 - POLISHING\n130 - REWORKS/BACKORDERS\n140 - ENGRAVING\n150 - FINAL INSPECTION\n160 - O.P. OTHER\n170 - SCRAP\n180 - O.P. ENGRAVING\n190 - O.P. LUCITE\n200 - O.P. CHROME\n210 - O.P. TRIM DIES\n220 - O.P. HEAT TREAT\n230 - O.P. LEATHER PRODUCTS\n240 - O.P. OFF SHORE\n250 - O.P. RAW MATERIALS\n260 - SHIPPING\n270 - WILL CALL\n280 - ORDERS SHIPPED",
+   "options": "Order Status",
    "print_hide": 1,
    "reqd": 1
   },
@@ -460,10 +461,11 @@
    "link_fieldname": "custom_traveler"
   }
  ],
- "modified": "2026-05-04 20:56:11.506938",
+ "modified": "2026-05-10 23:21:16.434706",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",
+ "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
   {

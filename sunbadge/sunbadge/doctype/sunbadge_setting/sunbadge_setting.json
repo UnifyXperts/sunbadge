@@ -1,12 +1,14 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "naming_series:",
  "creation": "2026-05-03 22:47:02.058948",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "status_to_complete_work_order",
-  "status_to_create_sales_invoice"
+  "status_to_create_sales_invoice",
+  "naming_series"
  ],
  "fields": [
   {
@@ -22,13 +24,18 @@
    "fieldtype": "Link",
    "label": "Status to Create Sales Invoice",
    "options": "Order Status"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-05 22:24:47.967316",
+ "modified": "2026-05-06 23:45:17.101379",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Sunbadge Setting",

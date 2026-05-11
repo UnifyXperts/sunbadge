@@ -44,12 +44,13 @@ frappe.ui.form.on("Traveler", {
 
                 frappe.confirm(
                     `
-                    ⚠️ <b>Sales Invoice & Manufacturing Already Executed</b><br><br>
+                    ⚠️ <b>Sales Invoice and Manufacturing have already been processed .</b><br><br>
                     This will:<br>
                     • Cancel the Sales Invoice<br>
                     • Remove stock entries<br>
                     • Reset Work Orders<br><br>
-                    Continue?
+                    
+                     Do you want to continue?
                     `,
                     function () {
 
@@ -89,9 +90,8 @@ frappe.ui.form.on("Traveler", {
 
                 frappe.confirm(
                     `
-                    ⚠️ <b>Manufacturing Already Executed</b><br><br>
-                    This will reset Work Orders & remove stock entries.<br><br>
-                    Continue?
+                    ⚠️ <b>This Work Order has already been processed.</b><br><br>
+                    Do you want to reset the completed Work Order and remove the associated Stock Entries?<br><br>
                     `,
                     function () {
 
@@ -127,9 +127,9 @@ frappe.ui.form.on("Traveler", {
 
                 frappe.confirm(
                     `
-                    ⚠️ <b>Sales Invoice Already Created</b><br><br>
-                    This will cancel the invoice.<br><br>
-                    Continue?
+                    ⚠️ <b>A Sales Invoice has already been created for this Traveler.</b><br><br>
+                        Continuing will cancel the existing Sales Invoice .<br><br>
+                        Do you want to proceed?
                     `,
                     function () {
 
@@ -141,7 +141,7 @@ frappe.ui.form.on("Traveler", {
 
                             let updated = executed.filter(s => get_code(s) !== invoice_code);
 
-                            frappe.msgprint("Invoice cancelled.");
+                            frappe.msgprint("Invoice deleted.");
 
                             frappe.db.set_value("Traveler", frm.doc.name, {
                                 executed_status: updated.join(", "),

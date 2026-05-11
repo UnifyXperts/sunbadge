@@ -80,7 +80,7 @@
    "fieldtype": "Data",
    "in_global_search": 1,
    "in_list_view": 1,
-   "label": "Die ID"
+   "label": "Die Description"
   },
   {
    "fieldname": "die_characteristics_1_section",
@@ -321,7 +321,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-06 03:35:29.249026",
+ "modified": "2026-05-08 03:40:54.061690",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Die Database",
