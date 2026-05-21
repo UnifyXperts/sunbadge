@@ -1,16 +1,16 @@
-frappe.listview_settings['Traveler'] = {
+// frappe.listview_settings['Traveler'] = {
 
-    refresh(listview) {
+//     refresh(listview) {
 
-        setTimeout(() => {
+//         setTimeout(() => {
 
-            listview.page.actions
-                .find('[data-label="Edit"]')
-                .parent()
-                .remove();
+//             listview.page.actions
+//                 .find('[data-label="Edit"]')
+//                 .parent()
+//                 .remove();
 
-        }, 100);
+//         }, 100);
 
-    }
+//     }
 
-};
+// };
