@@ -31,7 +31,7 @@ frappe.ui.form.on("Traveler", {
             const is_finish_done = executed.some(s => get_code(s) === finish_code);
             const is_invoice_done = executed.some(s => get_code(s) === invoice_code);
 
-            if (!is_finish_done && order_status_code > finish_code) {
+            if (!is_finish_done && !frm.doc.is_repair_ && order_status_code > finish_code) {
                     frappe.throw({
                         title: "Manufacturing Not Completed",
                         message: "You cannot move ahead. Please complete manufacturing first."
@@ -162,6 +162,21 @@ frappe.ui.form.on("Traveler", {
             // 🟢 EXECUTE MANUFACTURING (260)
             // =====================================================
             if (order_status === finish_status && !is_finish_done) {
+
+                // Skip Work Order creation for Repair
+                if (frm.doc.is_repair_) {
+
+                    executed.push(finish_status);
+
+                    frappe.msgprint("Repair Traveler: Work Order skipped.");
+
+                    frappe.db.set_value("Traveler", frm.doc.name, {
+                        executed_status: executed.join(", "),
+                        order_status: finish_status
+                    }).then(() => frm.reload_doc());
+
+                    return;
+                }
 
                 frappe.confirm(
                     `
