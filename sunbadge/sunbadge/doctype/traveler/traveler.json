@@ -28,6 +28,8 @@
   "executed_status",
   "items_section",
   "item",
+  "section_break_bdik",
+  "repair_item_table",
   "section_break_31",
   "total_qty",
   "column_break_33",
@@ -454,6 +456,16 @@
    "fieldname": "is_repair_",
    "fieldtype": "Check",
    "label": "is Repair ?"
+  },
+  {
+   "fieldname": "section_break_bdik",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "repair_item_table",
+   "fieldtype": "Table",
+   "label": "Repair Item Table",
+   "options": "Repairs Traveler Item"
   }
  ],
  "grid_page_length": 50,
@@ -470,7 +482,7 @@
    "link_fieldname": "custom_traveler"
   }
  ],
- "modified": "2026-05-24 23:35:13.811846",
+ "modified": "2026-05-26 21:58:56.497138",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",

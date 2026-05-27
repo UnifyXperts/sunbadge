@@ -1,0 +1,44 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-23 11:30:38.313483",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "repair_order_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "repair_order_status",
+   "fieldtype": "Data",
+   "label": "Repair Order Status"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-23 11:30:59.362094",
+ "modified_by": "Administrator",
+ "module": "Sunbadge",
+ "name": "Repair Order Status",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -437,6 +437,16 @@ def create_sales_invoice(traveler_name):
                 "cost_center": default_cc,
                 "allow_zero_valuation_rate":1
             })
+        
+        for item in traveler.repair_item_table:
+    
+            si.append("custom_repair_item_table", {
+                "item_code": item.item_code,
+                "quantity": item.quantity,
+                "item_description": item.item_description,
+                "repair_notes":item.repair_notes
+                
+            })
 
         # -----------------------------
         # FETCH SALES ORDER TAXES
@@ -458,7 +468,9 @@ def create_sales_invoice(traveler_name):
         # OPTIONAL FIELDS
         # -----------------------------
         si.custom_traveler = traveler.name
-        si.update_stock = 1
+        
+        if not traveler.is_repair_:
+            si.update_stock = 1
 
         # -----------------------------
         # SET VALUES
