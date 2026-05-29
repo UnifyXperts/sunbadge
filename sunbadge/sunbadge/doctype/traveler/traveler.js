@@ -223,11 +223,11 @@ frappe.ui.form.on("Traveler", {
                             method: "sunbadge.sunbadge.api.api.create_sales_invoice",
                             args: { traveler_name: frm.doc.name },
                             freeze: true
-                        }).then(() => {
+                        }).then((r) => {
 
                             executed.push(invoice_status);
 
-                            frappe.msgprint("Sales Invoice created.");
+                            frappe.msgprint(r.message.message);
 
                             frappe.db.set_value("Traveler", frm.doc.name, {
                                 executed_status: executed.join(", "),
