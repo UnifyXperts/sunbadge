@@ -480,9 +480,13 @@
   {
    "link_doctype": "Sales Invoice",
    "link_fieldname": "custom_traveler"
+  },
+  {
+   "link_doctype": "Delivery Note",
+   "link_fieldname": "custom_traveler"
   }
  ],
- "modified": "2026-05-26 21:58:56.497138",
+ "modified": "2026-05-28 00:28:55.570071",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",
