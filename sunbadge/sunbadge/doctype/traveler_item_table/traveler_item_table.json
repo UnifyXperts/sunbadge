@@ -13,8 +13,11 @@
   "bom_no",
   "work_order",
   "stock_entry",
+  "sales_invoice",
+  "delivery_note",
   "notes",
   "description",
+  "badge_image",
   "section_break_fpxs",
   "image",
   "image_view",
@@ -200,13 +203,30 @@
    "fieldname": "description",
    "fieldtype": "Text Editor",
    "label": " Description"
+  },
+  {
+   "fieldname": "badge_image",
+   "fieldtype": "Attach Image",
+   "label": "Badge Image"
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "delivery_note",
+   "fieldtype": "Link",
+   "label": "Delivery Note",
+   "options": "Delivery Note"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-14 03:11:02.940314",
+ "modified": "2026-05-28 01:48:40.125013",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler Item Table",
