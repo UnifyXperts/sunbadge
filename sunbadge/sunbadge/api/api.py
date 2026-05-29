@@ -1,10 +1,9 @@
 import frappe
 from frappe import _
-from frappe.utils import today, getdate, nowdate
-from frappe.utils import flt
+from frappe.utils import today, getdate, nowdate, flt, cint
 from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 from erpnext.accounts.utils import get_fiscal_year
-from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
+from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
 
 
 
@@ -342,12 +341,17 @@ def reset_work_orders(traveler_name):
 
     frappe.msgprint("✅ Stock unallocated and Work Orders reset successfully")
     
+
+
+
 @frappe.whitelist()
 def create_sales_invoice(traveler_name):
 
     try:
 
         traveler = frappe.get_doc("Traveler", traveler_name)
+
+        message = None
 
         if not traveler.customer:
             frappe.throw("Customer is required")
@@ -358,16 +362,88 @@ def create_sales_invoice(traveler_name):
         so = frappe.get_doc("Sales Order", traveler.sales_order)
 
         company_doc = frappe.get_doc("Company", so.company)
+
         default_cc = company_doc.cost_center
 
         if not default_cc:
-            frappe.throw(f"Default Cost Center not set in Company {so.company}")
 
-        so_item_map = {d.item_code: d for d in so.items}
+            frappe.throw(
+                f"Default Cost Center not set in Company {so.company}"
+            )
 
-        # -----------------------------
+        so_item_map = {
+            d.item_code: d
+            for d in so.items
+        }
+
+        # =========================================================
+        # CASE 1 : FULLY BILLED
+        # =========================================================
+
+        if flt(so.per_billed) == 100:
+
+            message = (
+                "Sales Order is fully billed, so the Delivery Note "
+                "was created successfully."
+            )
+
+            if not cint(traveler.is_repair_):
+
+                dn = make_delivery_note(so.name)
+
+                dn.set_missing_values()
+
+                # =====================================================
+                # ATTACH TRAVELER
+                # =====================================================
+
+                dn.custom_traveler = traveler.name
+
+                dn.insert(ignore_permissions=True)
+
+                dn.submit()
+
+                # =====================================================
+                # ATTACH DN TO TRAVELER ITEMS
+                # =====================================================
+
+                for dn_row in dn.items:
+
+                    for traveler_row in traveler.get("item") or []:
+
+                        if (
+                            dn_row.item_code == traveler_row.item_code
+                            and flt(dn_row.qty) == flt(traveler_row.quantity)
+                        ):
+                            frappe.log_error("test",f"{(
+                            dn_row.item_code == traveler_row.item_code
+                            and flt(dn_row.qty) == flt(traveler_row.quantity)
+                        )}")
+                            frappe.db.set_value(
+                                traveler_row.doctype,
+                                traveler_row.name,
+                                {
+                                    "delivery_note": dn.name,
+                                }
+                            )
+
+                frappe.db.commit()
+
+                return {
+                    "status": "success",
+                    "delivery_note": dn.name,
+                    "message": message
+                }
+
+            return {
+                "status": "success",
+                "message": "Repair traveler → No DN required"
+            }
+
+        # =========================================================
         # CREATE SALES INVOICE
-        # -----------------------------
+        # =========================================================
+
         si = frappe.new_doc("Sales Invoice")
 
         si.customer = traveler.customer
@@ -378,6 +454,7 @@ def create_sales_invoice(traveler_name):
 
         si.currency = so.currency
         si.conversion_rate = so.conversion_rate or 1
+
         si.price_list_currency = so.currency
         si.plc_conversion_rate = so.conversion_rate or 1
 
@@ -389,68 +466,242 @@ def create_sales_invoice(traveler_name):
             "default_receivable_account"
         )
 
-        # -----------------------------
-        # ADD ITEMS
-        # -----------------------------
-        for row in traveler.get("item") or []:
+        # =========================================================
+        # CASE 2 : NOT BILLED
+        # =========================================================
 
-            if row.item_code not in so_item_map:
-                frappe.throw(
-                    f"Item {row.item_code} not found in Sales Order"
-                )
+        if flt(so.per_billed) == 0:
 
-            so_item = so_item_map[row.item_code]
+            message = "Sales Invoice Created Successfully"
 
-            item_doc = frappe.get_doc("Item", row.item_code)
-
-            income_account = frappe.get_cached_value(
-                "Item Default",
-                {
-                    "parent": row.item_code,
-                    "company": so.company
-                },
-                "income_account"
-            ) or frappe.get_cached_value(
-                "Company",
-                so.company,
-                "default_income_account"
+            frappe.log_error(
+                "DEBUG",
+                "SO Not billed → Create SI with update_stock"
             )
 
-            amount = flt(row.quantity) * flt(so_item.rate)
+            if not cint(traveler.is_repair_):
 
-            si.append("items", {
-                "item_code": row.item_code,
-                "item_name": item_doc.item_name,
-                "description": item_doc.description,
-                "qty": row.quantity,
-                "uom": item_doc.stock_uom,
-                "stock_uom": item_doc.stock_uom,
-                "conversion_factor": 1,
-                "rate": so_item.rate,
-                "base_rate": so_item.rate,
-                "amount": amount,
-                "base_amount": amount,
-                "income_account": income_account,
-                "sales_order": so.name,
-                "so_detail": so_item.name,
-                "warehouse": so_item.warehouse,
-                "cost_center": default_cc,
-                "allow_zero_valuation_rate":1
-            })
-        
+                si.update_stock = 1
+
+
+
+        # =========================================================
+        # CASE 3 : PARTIALLY BILLED
+        # =========================================================
+
+        elif 0 < flt(so.per_billed) < 100:
+
+            message = (
+                "Sales Order is partially billed, so Delivery Note "
+                "has been created for billed items and Sales Invoice "
+                "has been created for pending items."
+            )
+
+
+            si.update_stock = 0
+
+            if not cint(traveler.is_repair_):
+
+                si.update_stock = 1
+
+            dn = None
+
+            if not cint(traveler.is_repair_):
+
+                dn = frappe.new_doc("Delivery Note")
+
+                dn.customer = so.customer
+                dn.company = so.company
+
+            for row in traveler.get("item") or []:
+
+                if row.item_code not in so_item_map:
+                    continue
+
+                so_item = so_item_map[row.item_code]
+
+                # -------------------------------------------------
+                # ITEM ALREADY BILLED
+                # -------------------------------------------------
+
+                if flt(so_item.billed_amt) >= flt(so_item.amount):
+
+                    if dn:
+
+                        dn.append("items", {
+                            "item_code": row.item_code,
+                            "item_name": so_item.item_name,
+                            "qty": row.quantity,
+                            "against_sales_order": so.name,
+                            "so_detail": so_item.name,
+                            "warehouse": so_item.warehouse
+                        })
+
+                # -------------------------------------------------
+                # ITEM NOT BILLED
+                # -------------------------------------------------
+
+                else:
+
+                    item_doc = frappe.get_doc(
+                        "Item",
+                        row.item_code
+                    )
+
+                    income_account = frappe.get_cached_value(
+                        "Item Default",
+                        {
+                            "parent": row.item_code,
+                            "company": so.company
+                        },
+                        "income_account"
+                    ) or frappe.get_cached_value(
+                        "Company",
+                        so.company,
+                        "default_income_account"
+                    )
+
+                    amount = (
+                        flt(row.quantity)
+                        * flt(so_item.rate)
+                    )
+
+                    si.append("items", {
+                        "item_code": row.item_code,
+                        "item_name": item_doc.item_name,
+                        "description": item_doc.description,
+                        "qty": row.quantity,
+                        "uom": item_doc.stock_uom,
+                        "stock_uom": item_doc.stock_uom,
+                        "conversion_factor": 1,
+                        "rate": so_item.rate,
+                        "base_rate": so_item.rate,
+                        "amount": amount,
+                        "base_amount": amount,
+                        "income_account": income_account,
+                        "sales_order": so.name,
+                        "so_detail": so_item.name,
+                        "warehouse": so_item.warehouse,
+                        "cost_center": default_cc,
+                        "allow_zero_valuation_rate": 1
+                    })
+
+            # -----------------------------------------------------
+            # CREATE DN
+            # -----------------------------------------------------
+
+            if dn and dn.items:
+
+                dn.set_missing_values()
+
+                # =====================================================
+                # ATTACH TRAVELER
+                # =====================================================
+
+                dn.custom_traveler = traveler.name
+
+                dn.insert(ignore_permissions=True)
+
+                dn.submit()
+
+                # =====================================================
+                # ATTACH DN TO TRAVELER ITEMS
+                # =====================================================
+
+                for dn_row in dn.items:
+
+                    for traveler_row in traveler.get("item") or []:
+
+                        if (
+                            dn_row.item_code == traveler_row.item_code
+                            and flt(dn_row.qty) == flt(traveler_row.quantity)
+                        ):
+
+                            frappe.db.set_value(
+                                traveler_row.doctype,
+                                traveler_row.name,
+                                {
+                                    "delivery_note": dn.name,
+                                }
+                            )
+
+
+        # =========================================================
+        # NORMAL ITEM ADDING
+        # =========================================================
+
+        if flt(so.per_billed) == 0:
+
+            for row in traveler.get("item") or []:
+
+                if row.item_code not in so_item_map:
+
+                    frappe.throw(
+                        f"Item {row.item_code} not found in Sales Order"
+                    )
+
+                so_item = so_item_map[row.item_code]
+
+                item_doc = frappe.get_doc(
+                    "Item",
+                    row.item_code
+                )
+
+                income_account = frappe.get_cached_value(
+                    "Item Default",
+                    {
+                        "parent": row.item_code,
+                        "company": so.company
+                    },
+                    "income_account"
+                ) or frappe.get_cached_value(
+                    "Company",
+                    so.company,
+                    "default_income_account"
+                )
+
+                amount = (
+                    flt(row.quantity)
+                    * flt(so_item.rate)
+                )
+
+                si.append("items", {
+                    "item_code": row.item_code,
+                    "item_name": item_doc.item_name,
+                    "description": item_doc.description,
+                    "qty": row.quantity,
+                    "uom": item_doc.stock_uom,
+                    "stock_uom": item_doc.stock_uom,
+                    "conversion_factor": 1,
+                    "rate": so_item.rate,
+                    "base_rate": so_item.rate,
+                    "amount": amount,
+                    "base_amount": amount,
+                    "income_account": income_account,
+                    "sales_order": so.name,
+                    "so_detail": so_item.name,
+                    "warehouse": so_item.warehouse,
+                    "cost_center": default_cc,
+                    "allow_zero_valuation_rate": 1
+                })
+
+        # =========================================================
+        # REPAIR ITEMS
+        # =========================================================
+
         for item in traveler.repair_item_table:
-    
+
             si.append("custom_repair_item_table", {
                 "item_code": item.item_code,
                 "quantity": item.quantity,
                 "item_description": item.item_description,
-                "repair_notes":item.repair_notes
-                
+                "repair_notes": item.repair_notes
             })
 
-        # -----------------------------
-        # FETCH SALES ORDER TAXES
-        # -----------------------------
+        # =========================================================
+        # TAXES
+        # =========================================================
+
         for tax in so.taxes:
 
             si.append("taxes", {
@@ -464,94 +715,65 @@ def create_sales_invoice(traveler_name):
                 "row_id": tax.row_id
             })
 
-        # -----------------------------
-        # OPTIONAL FIELDS
-        # -----------------------------
         si.custom_traveler = traveler.name
-        
-        if not traveler.is_repair_:
-            si.update_stock = 1
 
-        # -----------------------------
-        # SET VALUES
-        # -----------------------------
-        si.set_missing_values()
+        # =========================================================
+        # SAVE SI
+        # =========================================================
 
-        # -----------------------------
-        # CALCULATE TOTALS
-        # -----------------------------
-        si.calculate_taxes_and_totals()
+        if si.items:
 
-        # -----------------------------
-        # FETCH ADVANCES
-        # -----------------------------
-        si.set_advances()
+            si.set_missing_values()
 
-        # -----------------------------
-        # FORCE FULL ADVANCE ALLOCATION
-        # -----------------------------
-        for adv in si.advances:
+            si.calculate_taxes_and_totals()
 
-            if flt(adv.advance_amount) > flt(si.grand_total):
+            si.set_advances()
 
-                remaining = (
-                    flt(adv.advance_amount)
-                    - flt(si.grand_total)
-                )
+            si.calculate_taxes_and_totals()
 
-                si.append("taxes", {
-                    "charge_type": "Actual",
-                    "account_head": so.taxes[0].account_head,
-                    "description": "Advance Adjustment",
-                    "tax_amount": remaining,
-                    "cost_center": default_cc
-                })
+            si.set("payment_schedule", [])
 
-        # -----------------------------
-        # RECALCULATE TOTALS
-        # -----------------------------
-        si.calculate_taxes_and_totals()
+            # si.flags.ignore_validate = True
 
-        # -----------------------------
-        # REFETCH ADVANCES
-        # -----------------------------
-        si.set_advances()
+            # si.save(ignore_permissions=True)
+            
+            si.insert(ignore_permissions=True)
 
-        # -----------------------------
-        # FINAL RECALCULATION
-        # -----------------------------
-        si.calculate_taxes_and_totals()
+            si.submit()
 
-        # -----------------------------
-        # REMOVE PAYMENT SCHEDULE
-        # -----------------------------
-        si.set("payment_schedule", [])
+            # =====================================================
+            # ATTACH SI TO TRAVELER ITEMS
+            # =====================================================
 
-        # -----------------------------
-        # IGNORE FLAGS
-        # -----------------------------
-        si.flags.ignore_validate = True
+            for si_row in si.items:
 
-        # -----------------------------
-        # SAVE
-        # -----------------------------
-        si.save(ignore_permissions=True)
+                for traveler_row in traveler.get("item") or []:
 
-        # -----------------------------
-        # SUBMIT
-        # -----------------------------
-        si.submit()
+                    if (
+                        si_row.item_code == traveler_row.item_code
+                        and flt(si_row.qty) == flt(traveler_row.quantity)
+                    ):
 
-        # -----------------------------
-        # UPDATE TRAVELER
-        # -----------------------------
-        traveler.db_set("sales_invoice", si.name)
+                        frappe.db.set_value(
+                            traveler_row.doctype,
+                            traveler_row.name,
+                            {
+                                "sales_invoice": si.name,
+                            }
+                        )
+
+            traveler.db_set(
+                "sales_invoice",
+                si.name
+            )
+
 
         frappe.db.commit()
 
         return {
             "status": "success",
-            "sales_invoice": si.name
+            "sales_invoice": si.name if si.items else None,
+            "message": message
         }
 
     except Exception as e:
