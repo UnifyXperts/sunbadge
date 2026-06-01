@@ -37,7 +37,7 @@
   {
    "fieldname": "image",
    "fieldtype": "Attach Image",
-   "label": "Image"
+   "label": "Badge Image"
   },
   {
    "fieldname": "image_view",
@@ -47,7 +47,6 @@
   },
   {
    "allow_on_submit": 1,
-   "fetch_from": "item_code.custom_customer_description",
    "fieldname": "item_description",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -58,7 +57,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-05-26 22:06:33.054341",
+ "modified": "2026-05-29 03:46:21.180665",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Repairs Traveler Item",

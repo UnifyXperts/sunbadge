@@ -791,30 +791,49 @@ def create_sales_invoice(traveler_name):
 
 @frappe.whitelist()
 def cancel_sales_invoice(traveler_name):
+
     traveler = frappe.get_doc("Traveler", traveler_name)
 
-    if not traveler.sales_invoice:
-        frappe.throw("No Sales Invoice linked")
+    # if not traveler.sales_invoice:
+    #     frappe.throw("No Sales Invoice linked")
 
     si_name = traveler.sales_invoice
 
-    # -----------------------------
-    # STEP 1: REMOVE LINK FIRST
-    # -----------------------------
-    frappe.db.set_value("Traveler", traveler.name, "sales_invoice", "")
-    frappe.db.commit()   # 🔥 VERY IMPORTANT
+    # ------------------------------------
+    # REMOVE PARENT FIELD LINK
+    # ------------------------------------
+    traveler.db_set("sales_invoice", "", update_modified=False)
 
-    # Reload to avoid stale reference
+    # ------------------------------------
+    # REMOVE CHILD TABLE LINKS
+    # ------------------------------------
+    for row in traveler.item:
+        if row.sales_invoice == si_name:
+            row.db_set("sales_invoice", "", update_modified=False)
+
+    frappe.db.commit()
+
+    traveler.reload()
+
+    # ------------------------------------
+    # CANCEL SALES INVOICE
+    # ------------------------------------
     si = frappe.get_doc("Sales Invoice", si_name)
+
+    # si.flags.ignore_links = True
 
     if si.docstatus == 1:
         si.cancel()
 
-    frappe.delete_doc("Sales Invoice", si.name, force=1)
-    
+    frappe.delete_doc(
+        "Sales Invoice",
+        si.name,
+        force=True,
+        ignore_permissions=True    )
+
     return {
         "status": "success",
-        "message": f"Sales Invoice {si.name} cancelled"
+        "message": f"{si.name} cancelled successfully"
     }
     
 @frappe.whitelist()
