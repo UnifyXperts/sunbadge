@@ -88,22 +88,7 @@ def auto_manufacture_from_traveler(doc, method=None):
         
         if not source_warehouse:
 
-            item_group = frappe.db.get_value(
-                "Item",
-                item_code,
-                "item_group"
-            )
-
-            if item_group:
-
-                source_warehouse = frappe.db.get_value(
-                    "Item Default",
-                    {
-                        "parent": item_group,
-                        "company": doc.company
-                    },
-                    "default_warehouse"
-                )
+            source_warehouse=wip_warehouse
 
             
         if not source_warehouse:
@@ -1085,4 +1070,77 @@ def rollback_traveler(sales_order):
 
     return {
         "status": "success"
+    }
+    
+    
+@frappe.whitelist()
+def transfer_wip_to_store(traveler_name):
+
+    traveler = frappe.get_doc("Traveler", traveler_name)
+
+    if not traveler.sales_order:
+        frappe.throw("Sales Order not found in Traveler.")
+
+    work_orders = frappe.get_all(
+        "Work Order",
+        filters={
+            "sales_order": traveler.sales_order
+        },
+        fields=[
+            "name",
+            "wip_warehouse",
+            "source_warehouse"
+        ]
+    )
+
+    if not work_orders:
+        frappe.throw("No Work Orders found.")
+
+    for wo in work_orders:
+
+        work_order = frappe.get_doc("Work Order", wo.name)
+
+        stock_entry = frappe.new_doc("Stock Entry")
+
+        stock_entry.stock_entry_type = "Material Transfer"
+
+        stock_entry.from_warehouse = wo.wip_warehouse
+        stock_entry.to_warehouse = wo.source_warehouse
+
+        stock_entry.company = work_order.company
+
+        added = False
+
+        for item in work_order.required_items:
+
+            available_qty = frappe.db.get_value(
+                "Bin",
+                {
+                    "item_code": item.item_code,
+                    "warehouse": wo.wip_warehouse
+                },
+                "actual_qty"
+            ) or 0
+
+            if available_qty <= 0:
+                continue
+
+            stock_entry.append("items", {
+                "item_code": item.item_code,
+                "qty": available_qty,
+                "uom": item.stock_uom,
+                "stock_uom": item.stock_uom,
+                "s_warehouse": wo.wip_warehouse,
+                "t_warehouse": wo.source_warehouse
+            })
+
+            added = True
+
+        if added:
+
+            stock_entry.insert(ignore_permissions=True)
+            stock_entry.submit()
+
+    return {
+        "message": "WIP materials transferred back to Store Warehouse."
     }

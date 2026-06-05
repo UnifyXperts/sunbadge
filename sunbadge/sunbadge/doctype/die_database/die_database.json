@@ -9,9 +9,10 @@
   "section_break_lfa5",
   "die_number",
   "die_id",
-  "die_request",
+  "die_description",
   "column_break_dzto",
   "department",
+  "die_request",
   "die_characteristics_1_section",
   "characteristics",
   "other_details_for_die_characteristics_1_section",
@@ -76,13 +77,6 @@
    "unique": 1
   },
   {
-   "fieldname": "die_id",
-   "fieldtype": "Data",
-   "in_global_search": 1,
-   "in_list_view": 1,
-   "label": "Die Description"
-  },
-  {
    "fieldname": "die_characteristics_1_section",
    "fieldtype": "Section Break",
    "label": "Die Characteristics 1"
@@ -91,7 +85,8 @@
    "fieldname": "die_request",
    "fieldtype": "Link",
    "label": "Die Request",
-   "options": "Die Request"
+   "options": "Die Request",
+   "search_index": 1
   },
   {
    "collapsible": 1,
@@ -315,13 +310,23 @@
   {
    "fieldname": "data_gffu",
    "fieldtype": "Data"
+  },
+  {
+   "fieldname": "die_id",
+   "fieldtype": "Data",
+   "label": "Die ID"
+  },
+  {
+   "fieldname": "die_description",
+   "fieldtype": "Long Text",
+   "label": "Die Description"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-08 03:40:54.061690",
+ "modified": "2026-06-05 01:57:29.148480",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Die Database",
