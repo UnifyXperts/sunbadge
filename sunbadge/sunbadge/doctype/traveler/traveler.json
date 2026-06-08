@@ -472,21 +472,8 @@
  "icon": "fa fa-file-text",
  "idx": 105,
  "is_submittable": 1,
- "links": [
-  {
-   "link_doctype": "Work Order",
-   "link_fieldname": "custom_traveler"
-  },
-  {
-   "link_doctype": "Sales Invoice",
-   "link_fieldname": "custom_traveler"
-  },
-  {
-   "link_doctype": "Delivery Note",
-   "link_fieldname": "custom_traveler"
-  }
- ],
- "modified": "2026-05-28 00:28:55.570071",
+ "links": [],
+ "modified": "2026-06-07 23:10:19.405864",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",
