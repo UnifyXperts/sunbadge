@@ -8,18 +8,17 @@
  "field_order": [
   "status_to_complete_work_order",
   "status_to_create_sales_invoice",
-  "naming_series"
+  "naming_series",
+  "status_to_issue_raw_material"
  ],
  "fields": [
   {
-   "default": "260 - SHIPPING",
    "fieldname": "status_to_complete_work_order",
    "fieldtype": "Link",
    "label": "Status to Complete Work Order",
    "options": "Order Status"
   },
   {
-   "default": "280 - ORDERS SHIPPED",
    "fieldname": "status_to_create_sales_invoice",
    "fieldtype": "Link",
    "label": "Status to Create Sales Invoice",
@@ -29,13 +28,19 @@
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Naming Series"
+  },
+  {
+   "fieldname": "status_to_issue_raw_material",
+   "fieldtype": "Link",
+   "label": "Status to Issue Raw Material",
+   "options": "Order Status"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-06 23:45:17.101379",
+ "modified": "2026-06-07 22:19:45.407934",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Sunbadge Setting",
