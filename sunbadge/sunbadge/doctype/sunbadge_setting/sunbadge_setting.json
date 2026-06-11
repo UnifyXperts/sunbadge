@@ -6,6 +6,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "enabled",
   "status_to_complete_work_order",
   "status_to_create_sales_invoice",
   "naming_series",
@@ -34,13 +35,20 @@
    "fieldtype": "Link",
    "label": "Status to Issue Raw Material",
    "options": "Order Status"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "options": "Order Status"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-07 22:19:45.407934",
+ "modified": "2026-06-09 22:31:40.352531",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Sunbadge Setting",

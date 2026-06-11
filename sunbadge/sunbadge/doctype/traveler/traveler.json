@@ -9,6 +9,7 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
+  "custom_html",
   "customer_section",
   "column_break0",
   "company",
@@ -441,6 +442,7 @@
    "allow_on_submit": 1,
    "fieldname": "executed_status",
    "fieldtype": "Data",
+   "hidden": 1,
    "label": "Executed Status",
    "read_only": 1
   },
@@ -466,6 +468,11 @@
    "fieldtype": "Table",
    "label": "Repair Item Table",
    "options": "Repairs Traveler Item"
+  },
+  {
+   "fieldname": "custom_html",
+   "fieldtype": "HTML",
+   "label": "Custom HTML"
   }
  ],
  "grid_page_length": 50,
@@ -473,7 +480,7 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-06-07 23:10:19.405864",
+ "modified": "2026-06-10 20:48:55.047796",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",

@@ -336,6 +336,7 @@ def create_sales_invoice(traveler_name):
 
         traveler = frappe.get_doc("Traveler", traveler_name)
 
+
         message = None
 
         if not traveler.customer:
@@ -347,6 +348,7 @@ def create_sales_invoice(traveler_name):
         so = frappe.get_doc("Sales Order", traveler.sales_order)
 
         company_doc = frappe.get_doc("Company", so.company)
+        finished_goods_warehouse = company_doc.default_fg_warehouse
 
         default_cc = company_doc.cost_center
 
@@ -519,7 +521,7 @@ def create_sales_invoice(traveler_name):
                             "qty": row.quantity,
                             "against_sales_order": so.name,
                             "so_detail": so_item.name,
-                            "warehouse": so_item.warehouse
+                            "warehouse": finished_goods_warehouse
                         })
 
                 # -------------------------------------------------
@@ -566,7 +568,7 @@ def create_sales_invoice(traveler_name):
                         "income_account": income_account,
                         "sales_order": so.name,
                         "so_detail": so_item.name,
-                        "warehouse": so_item.warehouse,
+                        "warehouse": finished_goods_warehouse,
                         "cost_center": default_cc,
                         "allow_zero_valuation_rate": 1
                     })
@@ -655,9 +657,12 @@ def create_sales_invoice(traveler_name):
                     "item_name": item_doc.item_name,
                     "description": item_doc.description,
                     "qty": row.quantity,
-                    "uom": item_doc.stock_uom,
-                    "stock_uom": item_doc.stock_uom,
-                    "conversion_factor": 1,
+                    
+                    # IMPORTANT 
+                    "uom": so_item.uom, 
+                    "stock_uom": so_item.stock_uom, 
+                    "conversion_factor": so_item.conversion_factor,
+                    
                     "rate": so_item.rate,
                     "base_rate": so_item.rate,
                     "amount": amount,
@@ -665,7 +670,7 @@ def create_sales_invoice(traveler_name):
                     "income_account": income_account,
                     "sales_order": so.name,
                     "so_detail": so_item.name,
-                    "warehouse": so_item.warehouse,
+                    "warehouse": finished_goods_warehouse,
                     "cost_center": default_cc,
                     "allow_zero_valuation_rate": 1
                 })
@@ -1076,10 +1081,15 @@ def rollback_traveler(sales_order):
 @frappe.whitelist()
 def transfer_wip_to_store(traveler_name):
 
-    traveler = frappe.get_doc("Traveler", traveler_name)
+    traveler = frappe.get_doc(
+        "Traveler",
+        traveler_name
+    )
 
     if not traveler.sales_order:
-        frappe.throw("Sales Order not found in Traveler.")
+        frappe.throw(
+            "Sales Order not found in Traveler."
+        )
 
     work_orders = frappe.get_all(
         "Work Order",
@@ -1089,35 +1099,97 @@ def transfer_wip_to_store(traveler_name):
         fields=[
             "name",
             "wip_warehouse",
-            "source_warehouse"
+            "source_warehouse",
+            "company"
         ]
     )
 
     if not work_orders:
-        frappe.throw("No Work Orders found.")
+        frappe.throw(
+            "No Work Orders found."
+        )
 
     for wo in work_orders:
 
-        work_order = frappe.get_doc("Work Order", wo.name)
+        work_order = frappe.get_doc(
+            "Work Order",
+            wo.name
+        )
 
-        stock_entry = frappe.new_doc("Stock Entry")
+        stock_entry = frappe.new_doc(
+            "Stock Entry"
+        )
 
-        stock_entry.stock_entry_type = "Material Transfer"
+        stock_entry.stock_entry_type = (
+            "Material Transfer"
+        )
 
-        stock_entry.from_warehouse = wo.wip_warehouse
-        stock_entry.to_warehouse = wo.source_warehouse
-
-        stock_entry.company = work_order.company
+        stock_entry.company = (
+            work_order.company
+        )
 
         added = False
 
+        # =================================================
+        # LOOP REQUIRED ITEMS
+        # =================================================
+
         for item in work_order.required_items:
+
+            # ---------------------------------------------
+            # GET ITEM GROUP
+            # ---------------------------------------------
+
+            item_group = frappe.db.get_value(
+                "Item",
+                item.item_code,
+                "item_group"
+            )
+
+            target_warehouse = None
+
+            # ---------------------------------------------
+            # GET ITEM GROUP DEFAULT WAREHOUSE
+            # ---------------------------------------------
+
+            if item_group:
+
+                item_group_doc = frappe.get_doc(
+                    "Item Group",
+                    item_group
+                )
+
+                for row in (
+                    item_group_doc.item_group_defaults or []
+                ):
+
+                    if row.company == wo.company:
+
+                        target_warehouse = (
+                            row.default_warehouse
+                        )
+
+                        break
+
+            # fallback
+            if not target_warehouse:
+
+                target_warehouse = (
+                    wo.source_warehouse
+                )
+
+            # ---------------------------------------------
+            # CHECK AVAILABLE STOCK IN WIP
+            # ---------------------------------------------
 
             available_qty = frappe.db.get_value(
                 "Bin",
                 {
-                    "item_code": item.item_code,
-                    "warehouse": wo.wip_warehouse
+                    "item_code":
+                        item.item_code,
+
+                    "warehouse":
+                        wo.wip_warehouse
                 },
                 "actual_qty"
             ) or 0
@@ -1125,22 +1197,50 @@ def transfer_wip_to_store(traveler_name):
             if available_qty <= 0:
                 continue
 
-            stock_entry.append("items", {
-                "item_code": item.item_code,
-                "qty": available_qty,
-                "uom": item.stock_uom,
-                "stock_uom": item.stock_uom,
-                "s_warehouse": wo.wip_warehouse,
-                "t_warehouse": wo.source_warehouse
-            })
+            # ---------------------------------------------
+            # ADD ITEM
+            # ---------------------------------------------
+
+            stock_entry.append(
+                "items",
+                {
+                    "item_code":
+                        item.item_code,
+
+                    "qty":
+                        available_qty,
+
+                    "uom":
+                        item.stock_uom,
+
+                    "stock_uom":
+                        item.stock_uom,
+
+                    # source = WIP
+                    "s_warehouse":
+                        wo.wip_warehouse,
+
+                    # target = item group warehouse
+                    "t_warehouse":
+                        target_warehouse
+                }
+            )
 
             added = True
 
+        # =================================================
+        # INSERT / SUBMIT
+        # =================================================
+
         if added:
 
-            stock_entry.insert(ignore_permissions=True)
+            stock_entry.insert(
+                ignore_permissions=True
+            )
+
             stock_entry.submit()
 
     return {
-        "message": "WIP materials transferred back to Store Warehouse."
+        "message":
+            "WIP materials transferred back successfully."
     }
