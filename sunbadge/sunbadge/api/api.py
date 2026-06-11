@@ -254,77 +254,196 @@ def auto_create_stockentry(traveler_name):
             frappe.throw(f"Error for WO {wo_name}: {str(e)}")
             
 
+import frappe
+import time
+from frappe.exceptions import QueryDeadlockError
+
+
 @frappe.whitelist()
 def reset_work_orders(traveler_name):
 
-    doc = frappe.get_doc("Traveler", traveler_name)
-    items = doc.get("item") or []
+    try:
 
-    if not items:
-        frappe.throw("No items found in Traveler")
+        doc = frappe.get_doc("Traveler", traveler_name)
+        items = doc.get("item") or []
 
-    # ---------------------------------------
-    # STEP 1: COLLECT ALL STOCK ENTRIES
-    # ---------------------------------------
-    all_stock_entries = []
+        if not items:
+            frappe.throw("No items found in Traveler")
 
-    for item in items:
-        wo_name = item.get("work_order")
-        if not wo_name:
-            continue
+        # ---------------------------------------
+        # STEP 1: COLLECT ALL STOCK ENTRIES
+        # ---------------------------------------
+        stock_entry_map = {}
 
-        stock_entries = frappe.get_all(
-            "Stock Entry",
-            filters={"work_order": wo_name},
-            fields=["name", "docstatus", "stock_entry_type"]
+        for item in items:
+
+            wo_name = item.get("work_order")
+
+            if not wo_name:
+                continue
+
+            stock_entries = frappe.get_all(
+                "Stock Entry",
+                filters={"work_order": wo_name},
+                fields=[
+                    "name",
+                    "docstatus",
+                    "stock_entry_type",
+                    "creation"
+                ]
+            )
+
+            for se in stock_entries:
+                stock_entry_map[se.name] = se
+
+        all_stock_entries = list(stock_entry_map.values())
+
+        # ---------------------------------------
+        # STEP 2: REMOVE LINK FROM TRAVELER
+        # ---------------------------------------
+        for item in items:
+
+            frappe.db.set_value(
+                item.doctype,
+                item.name,
+                {
+                    "stock_entry": None,
+                },
+                update_modified=False
+            )
+
+        frappe.db.commit()
+
+        # ---------------------------------------
+        # STEP 3: CANCEL + DELETE STOCK ENTRIES
+        # ---------------------------------------
+        # Manufacture first
+        stock_entries_sorted = sorted(
+            all_stock_entries,
+            key=lambda x: (
+                0 if x.stock_entry_type == "Manufacture" else 1,
+                x.creation
+            )
         )
-        all_stock_entries.extend(stock_entries)
 
-    # ---------------------------------------
-    # STEP 2: REMOVE LINK FROM TRAVELER (DB-LEVEL, WORKS ON SUBMITTED DOC)
-    # ---------------------------------------
-    for item in items:
-        frappe.db.set_value(
-            item.doctype,
-            item.name,
-            {
-                "stock_entry": None,
-                # "work_order_status": "Not Started"
-            }
+        for se in stock_entries_sorted:
+
+            for attempt in range(3):
+
+                try:
+
+                    se_doc = frappe.get_doc(
+                        "Stock Entry",
+                        se.name
+                    )
+
+                    frappe.logger().info(
+                        f"Reset WO -> Processing {se.name}"
+                    )
+
+                    # -----------------------------
+                    # CANCEL
+                    # -----------------------------
+                    if se_doc.docstatus == 1:
+
+                        se_doc.cancel()
+
+                        # release stock locks
+                        frappe.db.commit()
+
+                    # -----------------------------
+                    # DELETE
+                    # -----------------------------
+                    frappe.delete_doc(
+                        "Stock Entry",
+                        se.name,
+                        force=1
+                    )
+
+                    frappe.db.commit()
+
+                    break
+
+                except QueryDeadlockError:
+
+                    frappe.db.rollback()
+
+                    if attempt == 2:
+                        raise
+
+                    time.sleep(2)
+
+                except Exception:
+                    frappe.db.rollback()
+                    raise
+
+        # ---------------------------------------
+        # STEP 4: RESET WORK ORDERS
+        # ---------------------------------------
+        wo_names = {
+            item.get("work_order")
+            for item in items
+            if item.get("work_order")
+        }
+
+        for wo_name in wo_names:
+
+            try:
+
+                wo_doc = frappe.get_doc(
+                    "Work Order",
+                    wo_name
+                )
+
+                # Let ERPNext recalculate
+                wo_doc.reload()
+
+                wo_doc.db_set(
+                    "produced_qty",
+                    0,
+                    update_modified=False
+                )
+
+                wo_doc.db_set(
+                    "material_transferred_for_manufacturing",
+                    0,
+                    update_modified=False
+                )
+
+                wo_doc.db_set(
+                    "status",
+                    "Not Started",
+                    update_modified=False
+                )
+
+                frappe.db.commit()
+
+            except Exception:
+                frappe.log_error(
+                    frappe.get_traceback(),
+                    f"Failed resetting WO {wo_name}"
+                )
+                raise
+
+        frappe.msgprint(
+            "✅ Stock unallocated and Work Orders reset successfully"
         )
 
-    # ---------------------------------------
-    # STEP 3: CANCEL + DELETE STOCK ENTRIES
-    # ---------------------------------------
-    # cancel Manufacture first, then others
-    stock_entries_sorted = sorted(
-        all_stock_entries,
-        key=lambda x: 0 if x.stock_entry_type == "Manufacture" else 1
-    )
+        return {
+            "status": "success",
+            "message": "Work Orders reset successfully"
+        }
 
-    for se in stock_entries_sorted:
-        se_doc = frappe.get_doc("Stock Entry", se.name)
+    except Exception:
 
-        if se_doc.docstatus == 1:
-            se_doc.cancel()
+        frappe.db.rollback()
 
-        frappe.delete_doc("Stock Entry", se.name, force=1)
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Reset Work Orders Failed"
+        )
 
-    # ---------------------------------------
-    # STEP 4: RESET WORK ORDERS
-    # ---------------------------------------
-    # (use unique WO list to avoid duplicate fetch)
-    wo_names = {item.get("work_order") for item in items if item.get("work_order")}
-
-    for wo_name in wo_names:
-        wo_doc = frappe.get_doc("Work Order", wo_name)
-
-        wo_doc.db_set("produced_qty", 0)
-        wo_doc.db_set("material_transferred_for_manufacturing", 0)
-        # wo_doc.db_set("completed_qty", 0)
-        wo_doc.db_set("status", "Not Started")
-
-    frappe.msgprint("✅ Stock unallocated and Work Orders reset successfully")
+        raise
     
 
 

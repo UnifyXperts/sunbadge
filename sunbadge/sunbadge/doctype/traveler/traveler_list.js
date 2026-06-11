@@ -32,6 +32,9 @@ frappe.listview_settings['Traveler'] = {
 
                 const invoice_status =
                     settings.status_to_create_sales_invoice;
+                
+                const stock_transfer_status =
+                    settings.status_to_issue_raw_material;
 
                 const work_order_limit = work_order_status
                     ? parseInt(work_order_status.split("-")[0].trim())
@@ -39,6 +42,10 @@ frappe.listview_settings['Traveler'] = {
 
                 const invoice_limit = invoice_status
                     ? parseInt(invoice_status.split("-")[0].trim())
+                    : 0;
+
+                const stock_transfer_limit = stock_transfer_status
+                    ? parseInt(stock_transfer_status.split("-")[0].trim())
                     : 0;
 
                 let invalid_docs = selected_docs.filter(doc => {
@@ -91,6 +98,12 @@ frappe.listview_settings['Traveler'] = {
                                             'name',
                                             'not like',
                                             `%${invoice_limit}%`
+                                        ],
+                                        [
+                                            'Order Status',
+                                            'name',
+                                            'not like',
+                                            `%${stock_transfer_limit}%`
                                         ]
                                     ]
                                 };

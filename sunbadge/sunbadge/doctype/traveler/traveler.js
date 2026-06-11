@@ -1,6 +1,13 @@
 frappe.ui.form.on("Traveler", {
     refresh: function(frm) {
 
+    if (frm.is_dirty()) {
+
+            setTimeout(() => {
+                frm.reload_doc();
+            }, 500);
+        }
+
     const wrapper = frm.fields_dict.custom_html?.wrapper;
     
     if (!wrapper) return;
@@ -147,207 +154,6 @@ frappe.ui.form.on("Traveler", {
                         message: "You cannot move ahead. Please complete manufacturing first."
                     });
                 }
-            // =====================================================
-            // 🔴 FULL / PARTIAL ROLLBACK
-            // =====================================================
-
-            if (order_status_code < material_issue_code) {
-
-                frappe.confirm(
-                    `
-                    ⚠️ <b>Rollback Required</b><br><br>
-
-                    ${
-                        is_invoice_done
-                            ? "• Sales Invoice will be reverted<br>"
-                            : ""
-                    }
-
-                    ${
-                        is_finish_done
-                            ? "• Manufacturing / Work Order will be reverted<br>"
-                            : ""
-                    }
-
-                    ${
-                        is_sufficient_material_available
-                            ? "• Material Transfer will be reverted<br>"
-                            : ""
-                    }
-
-                    <br>
-
-                    Do you want to continue?
-                    `,
-
-                    // =================================================
-                    // YES
-                    // =================================================
-                    async function () {
-
-                        try {
-
-                            // -----------------------------------------
-                            // REVERT SALES INVOICE
-                            // -----------------------------------------
-
-                            if (is_invoice_done) {
-
-                                await frappe.call({
-                                    method:
-                                        "sunbadge.sunbadge.api.api.cancel_sales_invoice",
-                                    args: {
-                                        traveler_name: frm.doc.name
-                                    },
-                                    freeze: true
-                                });
-
-                            }
-
-                            // -----------------------------------------
-                            // REVERT MATERIAL TRANSFER
-                            // -----------------------------------------
-
-                            if (
-                                is_sufficient_material_available
-                            ) {
-
-                                await frappe.call({
-                                    method:
-                                        "sunbadge.sunbadge.api.api.transfer_wip_to_store",
-                                    args: {
-                                        traveler_name: frm.doc.name
-                                    },
-                                    freeze: true
-                                });
-
-                            }
-
-                            // -----------------------------------------
-                            // REVERT MANUFACTURING / WO
-                            // -----------------------------------------
-
-                            if (is_finish_done) {
-
-                                await frappe.call({
-                                    method:
-                                        "sunbadge.sunbadge.api.api.reset_work_orders",
-                                    args: {
-                                        traveler_name: frm.doc.name
-                                    },
-                                    freeze: true
-                                });
-
-                            }
-
-                            
-
-                            // -----------------------------------------
-                            // REMOVE EXECUTED STATUS
-                            // -----------------------------------------
-
-                            let updated = executed.filter((s) => {
-
-                                let code = get_code(s);
-
-                                // remove 280
-                                if (
-                                    is_invoice_done &&
-                                    code === invoice_code
-                                ) {
-                                    return false;
-                                }
-
-                                // remove 260
-                                if (
-                                    is_finish_done &&
-                                    code === finish_code
-                                ) {
-                                    return false;
-                                }
-
-                                // remove 250
-                                if (
-                                    is_sufficient_material_available &&
-                                    code === material_issue_code
-                                ) {
-                                    return false;
-                                }
-
-                                return true;
-
-                            });
-
-                            // -----------------------------------------
-                            // UPDATE STATUS
-                            // -----------------------------------------
-
-                            frappe.msgprint(
-                                "Rollback completed successfully."
-                            );
-
-                            frappe.db.set_value(
-                                "Traveler",
-                                frm.doc.name,
-                                {
-                                    executed_status:
-                                        updated.join(", "),
-                                    order_status:
-                                        order_status
-                                }
-                            ).then(() => {
-
-                                frm.reload_doc();
-
-                            });
-
-                        } catch (e) {
-
-                            frappe.msgprint({
-                                title: "Error",
-                                indicator: "red",
-                                message: "Rollback failed."
-                            });
-
-                        }
-
-                    },
-
-                    // =================================================
-                    // NO
-                    // =================================================
-                    function () {
-
-                        if (is_invoice_done) {
-
-                            frm.set_value(
-                                "order_status",
-                                invoice_status
-                            );
-
-                        } else if (is_finish_done) {
-
-                            frm.set_value(
-                                "order_status",
-                                finish_status
-                            );
-
-                        } else if (
-                            is_sufficient_material_available
-                        ) {
-
-                            frm.set_value(
-                                "order_status",
-                                material_issue_status
-                            );
-
-                        }
-
-                    }
-                );
-
-                return;
-            }
 
             // =====================================================
             // 🔴 FULL ROLLBACK (Invoice + Manufacturing)
@@ -379,9 +185,9 @@ frappe.ui.form.on("Traveler", {
                         }).then(() => {
 
                             frappe.msgprint("Invoice + Manufacturing reverted.");
-
+                            let updated = executed.filter(s => get_code(s) !== material_issue_status);
                             frappe.db.set_value("Traveler", frm.doc.name, {
-                                executed_status: "",
+                                executed_status: updated.join(", "),
                                 order_status: order_status
                             }).then(() => frm.reload_doc());
                         });
@@ -631,14 +437,10 @@ if (
                                     item_group_doc.item_group_defaults || []
                                 ).forEach((row) => {
 
-                                    if (
-                                        row.company === frm.doc.company
-                                    ) {
 
-                                        source_warehouse =
-                                            row.default_warehouse;
 
-                                    }
+                                source_warehouse  =  row.default_warehouse;
+
 
                                 });
 
@@ -931,9 +733,7 @@ if (
                         executed_status_list.join(", ")
                     );
 
-                    frappe.msgprint(
-                        "Sufficient material available in WIP Warehouse."
-                    );
+
 
                     frappe.db.set_value(
                         "Traveler",
