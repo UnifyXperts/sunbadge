@@ -162,39 +162,81 @@ frappe.ui.form.on("Traveler", {
 
                 frappe.confirm(
                     `
-                    ⚠️ <b>Sales Invoice and Manufacturing have already been processed .</b><br><br>
+                    ⚠️ <b>Sales Invoice and Manufacturing have already been processed.</b><br><br>
                     This will:<br>
                     • Cancel the Sales Invoice<br>
                     • Remove stock entries<br>
                     • Reset Work Orders<br><br>
-                    
-                     Do you want to continue?
+
+                    Do you want to continue?
                     `,
                     function () {
 
                         frappe.call({
                             method: "sunbadge.sunbadge.api.api.cancel_sales_invoice",
-                            args: { traveler_name: frm.doc.name },
+                            args: {
+                                traveler_name: frm.doc.name
+                            },
                             freeze: true
-                        });
+                        })
+                        .then(() => {
 
-                        frappe.call({
-                            method: "sunbadge.sunbadge.api.api.reset_work_orders",
-                            args: { traveler_name: frm.doc.name },
-                            freeze: true
-                        }).then(() => {
+                            return frappe.call({
+                                method: "sunbadge.sunbadge.api.api.reset_work_orders",
+                                args: {
+                                    traveler_name: frm.doc.name
+                                },
+                                freeze: true
+                            });
 
-                            frappe.msgprint("Invoice + Manufacturing reverted.");
-                            let updated = executed.filter(s => get_code(s) <= material_issue_code);
-                            frappe.db.set_value("Traveler", frm.doc.name, {
-                                executed_status: updated.join(", "),
-                                order_status: order_status
-                            }).then(() => frm.reload_doc());
+                        })
+                        .then(() => {
+
+                            let updated = executed.filter(
+                                s => get_code(s) <= material_issue_code
+                            );
+
+                            console.log("Updated Executed Status:", updated);
+
+                            return frappe.db.set_value(
+                                "Traveler",
+                                frm.doc.name,
+                                {
+                                    executed_status: updated.join(", "),
+                                    order_status: order_status
+                                }
+                            );
+
+                        })
+                        .then(() => {
+
+                            frappe.msgprint(
+                                "Invoice + Manufacturing reverted."
+                            );
+
+                            frm.reload_doc();
+
+                        })
+                        .catch((err) => {
+
+                            console.error(err);
+
+                            frappe.msgprint({
+                                title: __("Rollback Failed"),
+                                indicator: "red",
+                                message: err.message || __("An unexpected error occurred.")
+                            });
+
                         });
 
                     },
                     function () {
-                        frm.set_value("order_status", invoice_status);
+
+                        frm.set_value(
+                            "order_status",
+                            invoice_status
+                        );
+
                     }
                 );
 
@@ -222,8 +264,9 @@ frappe.ui.form.on("Traveler", {
                             let updated = executed.filter(s => get_code(s) < finish_code);
 
                             frappe.msgprint("Manufacturing reverted.");
-
+                            console.log(updated)
                             frappe.db.set_value("Traveler", frm.doc.name, {
+                                
                                 executed_status: updated.join(", "),
                                 order_status: order_status
                             }).then(() => frm.reload_doc());
@@ -258,7 +301,7 @@ frappe.ui.form.on("Traveler", {
                         }).then(() => {
 
                             let updated = executed.filter(s => get_code(s) < invoice_code);
-
+                            console.log(updated)
                             frappe.msgprint("Invoice deleted.");
 
                             frappe.db.set_value("Traveler", frm.doc.name, {
