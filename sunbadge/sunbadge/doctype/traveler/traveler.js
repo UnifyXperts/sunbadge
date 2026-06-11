@@ -34,7 +34,9 @@ frappe.ui.form.on("Traveler", {
                         border-left:4px solid red;
                         border-radius:6px;
                     ">
-                        ❌ <b>Sunbadge Settings</b> is not enabled
+                        ❌ <b><a href="/app/sunbadge-setting">
+                                Sunbadge Settings
+                            </a></b> is not enabled
                     </div>
                 `);
             }
