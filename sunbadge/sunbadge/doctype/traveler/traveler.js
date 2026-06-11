@@ -185,7 +185,7 @@ frappe.ui.form.on("Traveler", {
                         }).then(() => {
 
                             frappe.msgprint("Invoice + Manufacturing reverted.");
-                            let updated = executed.filter(s => get_code(s) !== material_issue_status);
+                            let updated = executed.filter(s => get_code(s) <= material_issue_code);
                             frappe.db.set_value("Traveler", frm.doc.name, {
                                 executed_status: updated.join(", "),
                                 order_status: order_status
@@ -219,7 +219,7 @@ frappe.ui.form.on("Traveler", {
                             freeze: true
                         }).then(() => {
 
-                            let updated = executed.filter(s => get_code(s) !== finish_code);
+                            let updated = executed.filter(s => get_code(s) < finish_code);
 
                             frappe.msgprint("Manufacturing reverted.");
 
@@ -257,7 +257,7 @@ frappe.ui.form.on("Traveler", {
                             freeze: true
                         }).then(() => {
 
-                            let updated = executed.filter(s => get_code(s) !== invoice_code);
+                            let updated = executed.filter(s => get_code(s) < invoice_code);
 
                             frappe.msgprint("Invoice deleted.");
 

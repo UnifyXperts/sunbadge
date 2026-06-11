@@ -897,48 +897,90 @@ def create_sales_invoice(traveler_name):
         frappe.throw(
             f"Failed to create Sales Invoice: {str(e)}"
         )
-
 @frappe.whitelist()
 def cancel_sales_invoice(traveler_name):
 
     traveler = frappe.get_doc("Traveler", traveler_name)
 
-    # if not traveler.sales_invoice:
-    #     frappe.throw("No Sales Invoice linked")
-
     si_name = traveler.sales_invoice
 
     # ------------------------------------
-    # REMOVE PARENT FIELD LINK
+    # NOTHING TO CANCEL
     # ------------------------------------
-    traveler.db_set("sales_invoice", "", update_modified=False)
+    if not si_name:
+        return {
+            "status": "success",
+            "message": "No Sales Invoice linked"
+        }
 
     # ------------------------------------
-    # REMOVE CHILD TABLE LINKS
+    # SI ALREADY DELETED
     # ------------------------------------
+    if not frappe.db.exists("Sales Invoice", si_name):
+
+        traveler.db_set(
+            "sales_invoice",
+            "",
+            update_modified=False
+        )
+
+        for row in traveler.item:
+            if row.sales_invoice == si_name:
+                row.db_set(
+                    "sales_invoice",
+                    "",
+                    update_modified=False
+                )
+
+        frappe.db.commit()
+
+        return {
+            "status": "success",
+            "message": "Sales Invoice already removed"
+        }
+
+    # ------------------------------------
+    # GET SI FIRST
+    # ------------------------------------
+    si = frappe.get_doc(
+        "Sales Invoice",
+        si_name
+    )
+
+    # ------------------------------------
+    # REMOVE LINKS
+    # ------------------------------------
+    traveler.db_set(
+        "sales_invoice",
+        "",
+        update_modified=False
+    )
+
     for row in traveler.item:
         if row.sales_invoice == si_name:
-            row.db_set("sales_invoice", "", update_modified=False)
+            row.db_set(
+                "sales_invoice",
+                "",
+                update_modified=False
+            )
 
     frappe.db.commit()
 
-    traveler.reload()
-
     # ------------------------------------
-    # CANCEL SALES INVOICE
+    # CANCEL
     # ------------------------------------
-    si = frappe.get_doc("Sales Invoice", si_name)
-
-    # si.flags.ignore_links = True
-
     if si.docstatus == 1:
         si.cancel()
 
+    # ------------------------------------
+    # DELETE
+    # ------------------------------------
     frappe.delete_doc(
         "Sales Invoice",
         si.name,
         force=True,
-        ignore_permissions=True    )
+        ignore_permissions=True
+    )
 
     return {
         "status": "success",
