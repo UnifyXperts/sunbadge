@@ -1,4 +1,8 @@
 frappe.listview_settings['Traveler'] = {
+    add_fields: [
+        "executed_status",
+        "order_status"
+    ],
     refresh(listview) {
 
         setTimeout(() => {
@@ -104,6 +108,12 @@ frappe.listview_settings['Traveler'] = {
                                             'name',
                                             'not like',
                                             `%${stock_transfer_limit}%`
+                                        ],
+                                        [
+                                            'Order Status',
+                                            'name',
+                                            'not like',
+                                            `%${270}%`
                                         ]
                                     ]
                                 };
@@ -134,16 +144,22 @@ frappe.listview_settings['Traveler'] = {
 
                             return;
                         }
+                        let selected_docs = listview.get_checked_items();
 
                         let blocked_docs = selected_docs.filter(doc => {
 
                             let executed_status = doc.executed_status
-                                ? parseInt(doc.executed_status.split("-")[0].trim())
-                                : 0;
+                                ? doc.executed_status
+                                    .split(",")
+                                    .map(d => parseInt(d.split("-")[0].trim()))
+                                    .filter(Boolean)
+                                : [];
 
+                                console.log(!executed_status.includes(stock_transfer_limit) &&
+                                selected_status > stock_transfer_limit)
                             return (
-                                executed_status < work_order_limit &&
-                                selected_status > work_order_limit
+                                !executed_status.includes(stock_transfer_limit) &&
+                                selected_status > stock_transfer_limit
                             );
                         });
 
@@ -152,7 +168,7 @@ frappe.listview_settings['Traveler'] = {
                             frappe.msgprint({
                                 title: __('Not Allowed'),
                                 message: __(
-                                    `Executed Status must reach ${work_order_status} before moving ahead`
+                                    `Executed Status must reach ${stock_transfer_limit} before moving ahead`
                                 ),
                                 indicator: 'red'
                             });

@@ -801,7 +801,7 @@ def create_sales_invoice(traveler_name):
         for item in traveler.repair_item_table:
 
             si.append("custom_repair_item_table", {
-                "item_code": item.item_code,
+                "repair_item_code": item.repair_item_code,
                 "quantity": item.quantity,
                 "item_description": item.item_description,
                 "repair_notes": item.repair_notes
