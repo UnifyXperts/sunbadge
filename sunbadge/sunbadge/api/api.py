@@ -565,6 +565,8 @@ def create_sales_invoice(traveler_name):
         si.plc_conversion_rate = so.conversion_rate or 1
 
         si.cost_center = default_cc
+        si.custom_rejected_reason = so.custom_rejected_reason
+        si.custom_rejection_notes = so.custom_rejection_notes
 
         si.debit_to = frappe.get_cached_value(
             "Company",
