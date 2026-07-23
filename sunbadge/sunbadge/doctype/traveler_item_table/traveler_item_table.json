@@ -223,7 +223,6 @@
   },
   {
    "allow_on_submit": 1,
-   "fetch_from": "item_code.description",
    "fieldname": "die_no_description",
    "fieldtype": "Small Text",
    "in_list_view": 1,
@@ -234,7 +233,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-22 22:33:28.780427",
+ "modified": "2026-07-23 00:13:11.452962",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler Item Table",
