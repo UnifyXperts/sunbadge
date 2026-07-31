@@ -4,6 +4,9 @@ from frappe.utils import today, getdate, nowdate, flt, cint
 from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 from erpnext.accounts.utils import get_fiscal_year
 from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note
+import frappe
+import time
+from frappe.exceptions import QueryDeadlockError
 
 
 
@@ -251,13 +254,7 @@ def auto_create_stockentry(traveler_name):
             frappe.msgprint(f"✅ Stock Entry Created: {se.name}")
 
         except Exception as e:
-            frappe.throw(f"Error for WO {wo_name}: {str(e)}")
-            
-
-import frappe
-import time
-from frappe.exceptions import QueryDeadlockError
-
+            frappe.throw(f"Error for WO {wo_name}: {str(e)}") 
 
 @frappe.whitelist()
 def reset_work_orders(traveler_name):
