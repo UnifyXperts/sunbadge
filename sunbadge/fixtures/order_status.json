@@ -24,8 +24,8 @@
   "docstatus": 0,
   "doctype": "Order Status",
   "modified": "2026-05-05 22:31:56.744645",
-  "name": "40 - HAND STAMPING",
-  "order_status": "40 - HAND STAMPING"
+  "name": "40 - ENGRAVING",
+  "order_status": "40 - ENGRAVING"
  },
  {
   "docstatus": 0,
@@ -52,15 +52,15 @@
   "docstatus": 0,
   "doctype": "Order Status",
   "modified": "2026-05-05 22:31:56.749640",
-  "name": "80 - ENAMEL GRINDING",
-  "order_status": "80 - ENAMEL GRINDING"
+  "name": "80 - ENAMEL GRIND",
+  "order_status": "80 - ENAMEL GRIND"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
   "modified": "2026-05-05 22:31:56.751032",
-  "name": "90 - PUMICING",
-  "order_status": "90 - PUMICING"
+  "name": "90 - PUMICE",
+  "order_status": "90 - PUMICE"
  },
  {
   "docstatus": 0,
@@ -72,127 +72,106 @@
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.753499",
+  "modified": "2026-08-05 23:29:27.083736",
   "name": "110 - REPAIR",
   "order_status": "110 - REPAIR"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.754735",
-  "name": "120 - POLISHING",
-  "order_status": "120 - POLISHING"
+  "modified": "2026-08-05 23:29:52.460408",
+  "name": "120 - POLISH",
+  "order_status": "120 - POLISH"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.756052",
-  "name": "130 - REWORKS/BACKORDERS",
-  "order_status": "130 - REWORKS/BACKORDERS"
+  "modified": "2026-08-05 23:30:09.821502",
+  "name": "130 - FINAL INSPECTION",
+  "order_status": "130 - FINAL INSPECTION"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.757271",
-  "name": "140 - ENGRAVING",
-  "order_status": "140 - ENGRAVING"
+  "modified": "2026-08-05 23:30:25.319592",
+  "name": "140 - O.P. RAW MATERIALS",
+  "order_status": "140 - O.P. RAW MATERIALS"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.758485",
-  "name": "150 - FINAL INSPECTION",
-  "order_status": "150 - FINAL INSPECTION"
+  "modified": "2026-08-05 23:30:42.642077",
+  "name": "150 - O.P. OTHER",
+  "order_status": "150 - O.P. OTHER"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.759685",
-  "name": "160 - O.P. OTHER",
-  "order_status": "160 - O.P. OTHER"
+  "modified": "2026-08-05 23:30:59.104205",
+  "name": "160 - O.P. LUCITE",
+  "order_status": "160 - O.P. LUCITE"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.761059",
-  "name": "170 - SCRAP",
-  "order_status": "170 - SCRAP"
+  "modified": "2026-08-05 23:31:13.954678",
+  "name": "170 - O.P. ENGRAVING",
+  "order_status": "170 - O.P. ENGRAVING"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.762434",
-  "name": "180 - O.P. ENGRAVING",
-  "order_status": "180 - O.P. ENGRAVING"
+  "modified": "2026-08-05 23:31:29.736584",
+  "name": "180 - O.P. CHROME",
+  "order_status": "180 - O.P. CHROME"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.763821",
-  "name": "190 - O.P. LUCITE",
-  "order_status": "190 - O.P. LUCITE"
+  "modified": "2026-08-05 23:31:45.844374",
+  "name": "190 - O.P. LEATHER",
+  "order_status": "190 - O.P. LEATHER"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.765193",
-  "name": "200 - O.P. CHROME",
-  "order_status": "200 - O.P. CHROME"
+  "modified": "2026-08-05 23:32:10.141634",
+  "name": "200 - O.P. OFF SHORE",
+  "order_status": "200 - O.P. OFF SHORE"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.766492",
-  "name": "210 - O.P. TRIM DIES",
-  "order_status": "210 - O.P. TRIM DIES"
+  "modified": "2026-08-05 23:32:26.648840",
+  "name": "210 - STOCK ORDERS",
+  "order_status": "210 - STOCK ORDERS"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.767744",
-  "name": "220 - O.P. HEAT TREAT",
-  "order_status": "220 - O.P. HEAT TREAT"
+  "modified": "2026-08-05 23:32:38.599412",
+  "name": "220 - SHIPPING",
+  "order_status": "220 - SHIPPING"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.768965",
-  "name": "230 - O.P. LEATHER PRODUCTS",
-  "order_status": "230 - O.P. LEATHER PRODUCTS"
+  "modified": "2026-08-05 23:32:56.235692",
+  "name": "230 - HOLD FOR PAYMENT",
+  "order_status": "230 - HOLD FOR PAYMENT"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.770205",
-  "name": "240 - O.P. OFF SHORE",
-  "order_status": "240 - O.P. OFF SHORE"
+  "modified": "2026-08-05 23:33:11.506114",
+  "name": "240 - WILL CALL",
+  "order_status": "240 - WILL CALL"
  },
  {
   "docstatus": 0,
   "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.771608",
-  "name": "250 - O.P. RAW MATERIALS",
-  "order_status": "250 - O.P. RAW MATERIALS"
- },
- {
-  "docstatus": 0,
-  "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.773040",
-  "name": "260 - SHIPPING",
-  "order_status": "260 - SHIPPING"
- },
- {
-  "docstatus": 0,
-  "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.774374",
-  "name": "270 - WILL CALL",
-  "order_status": "270 - WILL CALL"
- },
- {
-  "docstatus": 0,
-  "doctype": "Order Status",
-  "modified": "2026-05-05 22:31:56.775887",
-  "name": "280 - ORDERS SHIPPED",
-  "order_status": "280 - ORDERS SHIPPED"
+  "modified": "2026-08-05 23:33:25.466904",
+  "name": "250 - ORDERS SHIPPED",
+  "order_status": "250 - ORDERS SHIPPED"
  }
 ]
