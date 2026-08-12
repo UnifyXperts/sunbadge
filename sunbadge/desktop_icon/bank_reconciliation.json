@@ -1,0 +1,22 @@
+{
+ "app": "sunbadge",
+ "bg_color": "gray",
+ "creation": "2026-08-11 20:43:51.959126",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon_type": "App",
+ "idx": 0,
+ "label": "Bank Reconciliation",
+ "link": "/banking",
+ "link_type": "External",
+ "logo_url": "assets/sunbadge/images/bank_3798013.png",
+ "modified": "2026-08-11 21:03:22.547791",
+ "modified_by": "Administrator",
+ "name": "Bank Reconciliation",
+ "owner": "Administrator",
+ "parent_icon": "",
+ "restrict_removal": 0,
+ "roles": [],
+ "standard": 1
+}
