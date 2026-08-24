@@ -10,6 +10,7 @@
   "item_code",
   "delivery_date",
   "quantity",
+  "description",
   "build_description",
   "bom_no",
   "work_order",
@@ -215,13 +216,21 @@
    "fieldtype": "Text Editor",
    "in_list_view": 1,
    "label": "Build Description"
+  },
+  {
+   "fetch_from": "item_code.description",
+   "fetch_if_empty": 1,
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "hidden": 1,
+   "label": "Description"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-08-13 21:29:09.548835",
+ "modified": "2026-08-23 21:53:19.554967",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler Item Table",
