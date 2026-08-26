@@ -43,8 +43,15 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Lead" : "public/js/lead.js",
-              	"BOM":"public/js/bom.js"}
+doctype_js = {
+    		"Lead" : "public/js/lead.js",
+            "BOM":"public/js/bom.js",
+            "Die Database":"public/js/die_database.js",
+            "Quotation":"public/js/quotation.js",
+            "Sales Order":"public/js/sales_order.js",
+               }
+
+
 doctype_list_js = {"Traveler" : "public/js/traveler_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -136,10 +143,17 @@ doctype_list_js = {"Traveler" : "public/js/traveler_list.js"}
 fixtures=["Order Status"]
 
 doc_events = {
+    
 	"Traveler": {
 		"on_submit": "sunbadge.sunbadge.api.api.auto_manufacture_from_traveler",
-		
-	}
+	},
+	"Sales Order": {
+			"on_submit": "sunbadge.sunbadge.api.api.create_traveler_order"
+	},
+ "Communication": {
+		"after_insert": "sunbadge.sunbadge.api.api.notify_user_for_receival_of_email"
+  }
+ 
 }
 
 # Scheduled Tasks
