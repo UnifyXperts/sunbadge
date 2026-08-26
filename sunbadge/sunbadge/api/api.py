@@ -82,10 +82,6 @@ def auto_manufacture_from_traveler(doc, method=None):
         if not wip_warehouse:
             frappe.throw("Default WIP Warehouse not set in Company")
 
-        # -----------------------------
-        # SOURCE WAREHOUSE (Priority Based)
-        # -----------------------------
-        # source_warehouse=sales_order.set_warehouse
 
         source_warehouse=None
         
@@ -1404,3 +1400,196 @@ def transfer_wip_to_store(traveler_name):
         "message":
             "WIP materials transferred back successfully."
     }
+
+
+        
+@frappe.whitelist()
+def create_rejection_invoice(source_name):
+    if not source_name:
+        frappe.throw("Source Quotation is required")
+
+    # Get source quotation
+    source = frappe.get_doc("Quotation", source_name)
+
+    # Copy complete document
+    # Parent + child tables
+    new_doc = frappe.copy_doc(source)
+
+    # Set custom fields
+    new_doc.custom_reference_quotation = source.name
+    new_doc.custom_is_repair = source.custom_is_repair
+    new_doc.custom_has_rejected_qty = 1
+    new_doc.order_type = source.order_type
+
+    # Reset system fields
+    new_doc.docstatus = 0
+    new_doc.amended_from = None
+
+    # Insert as new quotation
+    new_doc.insert(ignore_permissions=True)
+
+    return new_doc.name
+
+def create_traveler_order(doc, method):
+    if not doc.custom_direct_sales:
+        traveler = frappe.new_doc("Traveler")
+        
+        traveler.customer = doc.customer
+        traveler.customer_name = doc.customer_name
+        traveler.company = doc.company
+        traveler.transaction_date = doc.transaction_date
+        traveler.delivery_date = doc.delivery_date
+        traveler.sales_order = doc.name
+        traveler.gauge_note = doc.custom_gauge_notes
+        
+        traveler.address_display = doc.address_display
+        traveler.shipping_address = doc.shipping_address
+        traveler.company_address_display = doc.company_address_display
+        
+        traveler.customer_address = doc.customer_address
+        traveler.shipping_address_name = doc.shipping_address_name
+        traveler.company_address = doc.company_address
+        
+        traveler.po_no = doc.po_no
+        traveler.order_status = doc.custom_order_status
+        traveler.is_repair_ = doc.custom_is_repair
+        
+        for item in doc.items:
+            
+            traveler.append("item", {
+                "item_code": item.item_code,
+                "quantity": item.qty,
+                "delivery_date":item.delivery_date,
+                "description": item.description,
+                # "internal_description":item.description,
+                
+                "die_no1":item.custom_die_no1,
+                "die_des1":item.custom_die_des1,
+                
+                "die_no2":item.custom_die_no2,
+                "die_des2":item.custom_die_des2,
+                
+                "die_no3":item.custom_die_no3,
+                "die_des3":item.custom_die_des3,
+                
+                "die_no4":item.custom_die_no4,
+                "die_des4":item.custom_die_des4,
+                
+                "die_no5":item.custom_die_no5,
+                "die_des5":item.custom_die_des5,
+                
+                "die_no6":item.custom_die_no6,
+                "die_des6":item.custom_die_des6,
+                
+                "die_no7":item.custom_die_no7,
+                "die_des7":item.custom_die_des7,
+                
+                "die_no8":item.custom_die_no8,
+                "die_des8":item.custom_die_des8,
+                
+                "bom_no":item.bom_no
+            })
+            
+        for item in doc.custom_repair_item_table:
+            
+            traveler.append("repair_item_table", {
+                "repair_item_code": item.repair_item_code,
+                "quantity": item.quantity,
+                "accepted_qty": item.accepted_qty,
+                "item_description": item.item_description,
+                "repair_notes":item.repair_notes,
+                "image":item.image
+                
+            })
+        
+        traveler.insert(ignore_permissions=True)
+        traveler.submit()
+
+def notify_user_for_receival_of_email(doc, method):
+    if doc.sent_or_received == "Received":
+
+        frappe.log_error(
+            title="Email Debug",
+            message=f"""
+            Triggered Communication
+
+            Name: {doc.name}
+            Sender: {doc.sender}
+            Recipients: {doc.recipients}
+            CC: {doc.cc}
+            """
+        )
+
+        from_email = (doc.sender or "").strip()
+
+        # collect recipients
+        recipients = []
+
+        if doc.recipients:
+            recipients.extend([
+                r.strip().lower()
+                for r in doc.recipients.split(",")
+                if r.strip()
+            ])
+
+        if doc.cc:
+            recipients.extend([
+                r.strip().lower()
+                for r in doc.cc.split(",")
+                if r.strip()
+            ])
+
+        recipients = list(set(recipients))
+
+        frappe.log_error(
+            title="Email Debug",
+            message=f"""
+            Processed Recipients
+
+            {recipients}
+            """
+        )
+
+        # find users
+        users = frappe.get_all(
+            "User",
+            filters={
+                "email": ["in", recipients]
+            },
+            fields=["name", "email"]
+        )
+
+        frappe.log_error(
+            title="Email Debug",
+            message=f"""
+            Matched Users
+
+            {users}
+            """
+        )
+
+        for user in users:
+
+            frappe.log_error(
+                title="Email Debug",
+                message=f"""
+                Creating Notification
+
+                User: {user.name}
+                Email: {user.email}
+                """
+            )
+
+            frappe.get_doc({
+                "doctype": "Notification Log",
+                "subject": f"Email received from {from_email}",
+                "for_user": user.name,
+                "type": "Alert",
+                "email_content": f"You received an email from {from_email}"
+            }).insert(ignore_permissions=True)
+
+        frappe.log_error(
+            title="Email Debug",
+            message="Script Completed Successfully"
+        )
+    
