@@ -1461,7 +1461,9 @@ def create_traveler_order(doc, method):
                 "quantity": item.qty,
                 "delivery_date":item.delivery_date,
                 "description": item.description,
+                
                 # "internal_description":item.description,
+                "notes":item.custom_notes,
                 
                 "die_no1":item.custom_die_no1,
                 "die_des1":item.custom_die_des1,

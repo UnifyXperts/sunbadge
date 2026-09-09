@@ -49,10 +49,17 @@ doctype_js = {
             "Die Database":"public/js/die_database.js",
             "Quotation":"public/js/quotation.js",
             "Sales Order":"public/js/sales_order.js",
+            "Customer": [
+				"public/js/custom_address_and_contact.js",
+				"public/js/customer.js",
+			]
                }
 
 
-doctype_list_js = {"Traveler" : "public/js/traveler_list.js"}
+doctype_list_js = {
+	"Traveler" : "public/js/traveler_list.js",
+	"Sales Order" : "public/js/sales_order_list.js",
+}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 

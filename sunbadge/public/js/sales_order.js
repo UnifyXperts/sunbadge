@@ -235,7 +235,92 @@ frappe.ui.form.on("Sales Order", {
             `No Service Item Added For Repair Item <b>${frm.doc.custom_reference_item}</b>`
         );
     }
-}
+},
+shipping_address_name: async function (frm) {
+	if (!frm.doc.shipping_address_name) {
+		frm.set_value("custom_shipping_contact_person", "");
+		frm.set_value("custom_shipping_contact_email", "");
+		return;
+	}
+
+	try {
+		// Get selected Address
+		const address = await frappe.db.get_doc(
+			"Address",
+			frm.doc.shipping_address_name
+		);
+
+		console.log("Selected Address:", address);
+
+		// Find linked Customer / Supplier
+		const party_link = address.links?.find((link) =>
+			["Customer", "Supplier"].includes(link.link_doctype)
+		);
+
+		if (!party_link) {
+			console.log("No Customer/Supplier linked to this Address");
+			return;
+		}
+
+		// Get Shipping Contacts
+		const shipping_contacts = await frappe.db.get_list("Contact", {
+			filters: {
+				custom_is_shipping_contact: 1,
+			},
+			fields: [
+				"name",
+				"first_name",
+				"last_name",
+				"email_id",
+				"phone",
+				"mobile_no",
+			],
+		});
+
+		if (!shipping_contacts.length) {
+			frappe.msgprint(__("No Shipping Contact found"));
+			return;
+		}
+
+		// Find shipping contact linked to same party
+		for (const contact of shipping_contacts) {
+			const contact_doc = await frappe.db.get_doc(
+				"Contact",
+				contact.name
+			);
+
+			const is_linked = contact_doc.links?.some(
+				(link) =>
+					link.link_doctype === party_link.link_doctype &&
+					link.link_name === party_link.link_name
+			);
+
+			if (is_linked) {
+				console.log("Shipping Contact Found:", contact_doc);
+
+				// IMPORTANT: Set actual Contact document name
+				await frm.set_value(
+					"custom_shipping_contact_person",
+					contact_doc.name
+				);
+
+				await frm.set_value(
+					"custom_shipping_contact_email",
+					contact_doc.email_id || ""
+				);
+
+
+				return;
+			}
+		}
+
+		frappe.msgprint(
+			__("No Shipping Contact found for this Customer/Supplier")
+		);
+	} catch (error) {
+		console.error("Error fetching Shipping Contact:", error);
+	}
+},
     
 });
 
@@ -367,3 +452,5 @@ async function get_item_and_set_service(frm, item_code) {
         return false;
     }
 }
+
+
