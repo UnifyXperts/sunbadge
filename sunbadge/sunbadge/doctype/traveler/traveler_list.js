@@ -22,21 +22,21 @@ frappe.listview_settings['Traveler'] = {
                 }
 
                 const settings_response = await frappe.call({
-                method: "frappe.client.get",
-                args: {
-                    doctype: "Sunbadge Setting",
-                    name: "Sunbadge Setting"
-                }
-            });
+                    method: "frappe.client.get",
+                    args: {
+                        doctype: "Sunbadge Setting",
+                        name: "Sunbadge Setting"
+                    }
+                });
 
-            const settings = settings_response.message;
+                const settings = settings_response.message;
 
                 const work_order_status =
                     settings.status_to_complete_work_order;
 
                 const invoice_status =
                     settings.status_to_create_sales_invoice;
-                
+
                 const stock_transfer_status =
                     settings.status_to_issue_raw_material;
 
@@ -155,7 +155,7 @@ frappe.listview_settings['Traveler'] = {
                                     .filter(Boolean)
                                 : [];
 
-                                console.log(!executed_status.includes(stock_transfer_limit) &&
+                            console.log(!executed_status.includes(stock_transfer_limit) &&
                                 selected_status > stock_transfer_limit)
                             return (
                                 !executed_status.includes(stock_transfer_limit) &&
