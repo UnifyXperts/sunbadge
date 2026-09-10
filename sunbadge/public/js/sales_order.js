@@ -244,25 +244,19 @@ shipping_address_name: async function (frm) {
 	}
 
 	try {
-		// Get selected Address
-		const address = await frappe.db.get_doc(
+
+        const address = await frappe.db.get_doc(
 			"Address",
 			frm.doc.shipping_address_name
 		);
 
 		console.log("Selected Address:", address);
 
-		// Find linked Customer / Supplier
 		const party_link = address.links?.find((link) =>
 			["Customer", "Supplier"].includes(link.link_doctype)
 		);
 
-		if (!party_link) {
-			console.log("No Customer/Supplier linked to this Address");
-			return;
-		}
 
-		// Get Shipping Contacts
 		const shipping_contacts = await frappe.db.get_list("Contact", {
 			filters: {
 				custom_is_shipping_contact: 1,
@@ -277,12 +271,8 @@ shipping_address_name: async function (frm) {
 			],
 		});
 
-		if (!shipping_contacts.length) {
-			frappe.msgprint(__("No Shipping Contact found"));
-			return;
-		}
 
-		// Find shipping contact linked to same party
+
 		for (const contact of shipping_contacts) {
 			const contact_doc = await frappe.db.get_doc(
 				"Contact",
@@ -296,9 +286,7 @@ shipping_address_name: async function (frm) {
 			);
 
 			if (is_linked) {
-				console.log("Shipping Contact Found:", contact_doc);
 
-				// IMPORTANT: Set actual Contact document name
 				await frm.set_value(
 					"custom_shipping_contact_person",
 					contact_doc.name
@@ -314,9 +302,7 @@ shipping_address_name: async function (frm) {
 			}
 		}
 
-		frappe.msgprint(
-			__("No Shipping Contact found for this Customer/Supplier")
-		);
+
 	} catch (error) {
 		console.error("Error fetching Shipping Contact:", error);
 	}
