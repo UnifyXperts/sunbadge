@@ -52,7 +52,8 @@ doctype_js = {
             "Customer": [
 				"public/js/custom_address_and_contact.js",
 				"public/js/customer.js",
-			]
+			],
+            "Sales Invoice":"public/js/sales_invoice.js",
                }
 
 
