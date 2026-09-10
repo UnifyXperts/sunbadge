@@ -1,8 +1,9 @@
 {
  "actions": [],
  "allow_auto_repeat": 1,
+ "allow_bulk_edit": 1,
  "allow_import": 1,
- "autoname": "TRA-.YYYY.-.MM.-.####",
+ "autoname": "Format: PRD-{YY}-{####}",
  "creation": "2013-06-18 12:39:59",
  "doctype": "DocType",
  "document_type": "Document",
@@ -493,7 +494,7 @@
    "link_fieldname": "custom_traveler"
   }
  ],
- "modified": "2026-06-10 23:31:53.705858",
+ "modified": "2026-09-09 21:50:50.101361",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Traveler",
