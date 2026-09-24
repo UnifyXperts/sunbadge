@@ -1,19 +1,19 @@
 frappe.ui.form.on("Sales Order", {
     validate(frm) {
         if (!frm.doc.custom_direct_sales) return;
-    
-            frm.doc.items.forEach(row => {
-                frappe.model.set_value(
-                    row.doctype,
-                    row.name,
-                    "bom_no",
-                    ""
-                );
-            });
-},
+
+        frm.doc.items.forEach(row => {
+            frappe.model.set_value(
+                row.doctype,
+                row.name,
+                "bom_no",
+                ""
+            );
+        });
+    },
     setup(frm) {
-        
-        frm.set_query("item_code", "items", function(doc, cdt, cdn) {
+
+        frm.set_query("item_code", "items", function (doc, cdt, cdn) {
 
             if (doc.custom_is_repair) {
 
@@ -36,7 +36,7 @@ frappe.ui.form.on("Sales Order", {
         });
 
         // BOM Filter
-        frm.fields_dict.items.grid.get_field('bom_no').get_query = function(doc, cdt, cdn) {
+        frm.fields_dict.items.grid.get_field('bom_no').get_query = function (doc, cdt, cdn) {
 
             let row = locals[cdt][cdn];
 
@@ -49,72 +49,136 @@ frappe.ui.form.on("Sales Order", {
             };
         };
     },
-    custom_is_repair(frm){ if(frm.doc.custom_is_repair){
+    custom_is_repair(frm) {
+        if (frm.doc.custom_is_repair) {
             frm.fields_dict.items.grid.update_docfield_property(
                 "custom_customer_description",
                 "hidden",
                 1
             );
             frm.refresh_field("items");
-        }},
+        }
+    },
     refresh(frm) {
-       
-        
+
         if (
-            frm.doc.docstatus == 1 &&
-            frm.doc.workflow_state !== "Cancelled"
+            frm.doc.docstatus == 1 && frm.doc.workflow_state !== "Cancelled"
         ) {
 
-            frm.add_custom_button(__("Cancel & Rollback"), function() {
-
+            frm.add_custom_button(__("Cancel & Rollback"), function () {
                 frappe.confirm(
-
                     __("This will cancel linked Work Orders / Sales Invoices and revert workflow state.<br><br>Do you want to continue?"),
-
-                    function() {
-
+                    function () {
                         frappe.call({
                             method: "sunbadge.sunbadge.api.api.rollback_traveler",
-                            args: {
-                                sales_order: frm.doc.name
-                            },
+                            args: { sales_order: frm.doc.name },
                             freeze: true,
                             freeze_message: __("Cancelling linked documents..."),
-
-                            callback: function(r) {
+                            callback: function (r) {
+                                if (r.exc) return;
 
                                 frappe.show_alert({
                                     message: __("Rollback completed"),
                                     indicator: "green"
                                 });
 
-                                frm.set_value("workflow_state", "Draft");
-
-                                frm.save().then(() => {
-                                    window.location.reload();
-                                });
+                                frm.reload_doc();
                             }
                         });
                     },
-
-                    function() {
-
+                    function () {
                         frappe.show_alert({
                             message: __("Rollback cancelled"),
                             indicator: "orange"
                         });
                     }
                 );
-
             }).addClass("btn-danger");
-            
-            
+
+
             if (frm.doc.workflow_status == "Verified")
                 frm.set_df_property("custom_order_status", "read_only", 1);
-        
+
         }
-        
-        
+        if (frm.doc.workflow_state !== "Cancelled") return;
+
+        frm.page.set_secondary_action(__("Delete"), async () => {
+            const confirmed = await new Promise(resolve => {
+                frappe.confirm(
+                    __("Are you sure you want to delete this Sales Order?"),
+                    () => resolve(true),
+                    () => resolve(false)
+                );
+            });
+            if (!confirmed) return;
+
+            // Cancel without returning the doc (avoids as_dict / secondary_items on Work Order)
+            const cancel_docs = async (doctype, names) => {
+                if (!names.length) return;
+                const r = await frappe.call({
+                    method: "frappe.desk.doctype.bulk_update.bulk_update.submit_cancel_or_update_docs",
+                    args: { doctype, docnames: names, action: "cancel" }
+                });
+                const failed = Array.isArray(r.message) ? r.message : [];
+                if (failed.length) {
+                    throw new Error(__("Could not cancel {0}: {1}", [doctype, failed.join(", ")]));
+                }
+            };
+
+            const delete_doc = (doctype, name) =>
+                frappe.call({
+                    method: "frappe.client.delete",
+                    args: { doctype, name }
+                });
+
+            frappe.dom.freeze(__("Cancelling and deleting..."));
+
+            try {
+                // 1. Linked Work Orders
+                const work_orders = await frappe.db.get_list("Work Order", {
+                    filters: { sales_order: frm.doc.name },
+                    fields: ["name", "docstatus"],
+                    limit: 100
+                });
+
+                for (const wo of work_orders) {
+                    if (wo.docstatus === 1) {
+                        await cancel_docs("Work Order", [wo.name]);
+                    }
+                    await delete_doc("Work Order", wo.name);
+                }
+
+                // 2. Cancel + delete the Sales Order
+                const so = await frappe.db.get_value("Sales Order", frm.doc.name, "docstatus");
+                if (so.message?.docstatus === 1) {
+                    await frappe.call({
+                        method: "frappe.client.cancel",
+                        args: { doctype: "Sales Order", name: frm.doc.name }
+                    });
+                }
+                await delete_doc("Sales Order", frm.doc.name);
+
+                frappe.show_alert({
+                    message: __("Sales Order deleted successfully"),
+                    indicator: "green"
+                });
+                frappe.set_route("List", "Sales Order");
+
+            } catch (e) {
+                console.error("Cancel & Delete Error:", e);
+                frappe.msgprint({
+                    title: __("Cancel & Delete Failed"),
+                    message: e.message || __("Unable to cancel and delete the documents."),
+                    indicator: "red"
+                });
+            } finally {
+                frappe.dom.unfreeze();
+            }
+        }).addClass("btn-danger");
+
+
+
+
     },
 
     before_workflow_action(frm) {
@@ -131,7 +195,7 @@ frappe.ui.form.on("Sales Order", {
 
         let missing_bom = frm.doc.items.some(row => !row.bom_no);
 
-        if (missing_bom&&!frm.doc.custom_direct_sales) {
+        if (missing_bom && !frm.doc.custom_direct_sales) {
 
             frappe.validated = false;
 
@@ -143,26 +207,26 @@ frappe.ui.form.on("Sales Order", {
             return;
         }
 
-        let confirmed = !frm.doc.custom_direct_sales&&confirm(
+        let confirmed = !frm.doc.custom_direct_sales && confirm(
             "Please review and verify all selected BOMs before approval.\n\nDo you want to continue?"
         );
 
-        if (!confirmed&&!frm.doc.custom_direct_sales) {
+        if (!confirmed && !frm.doc.custom_direct_sales) {
 
-    frappe.validated = false;
+            frappe.validated = false;
 
-    frappe.msgprint(__("Workflow action cancelled by user."));
+            frappe.msgprint(__("Workflow action cancelled by user."));
 
-    setTimeout(() => {
-        window.location.reload();
-    }, 300);
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
 
-    throw new Error("Workflow Cancelled");
-}
+            throw new Error("Workflow Cancelled");
+        }
         else
             frappe.validated = true;
     },
-    custom_reference_sales_order(frm)  {
+    custom_reference_sales_order(frm) {
 
         if (!frm.doc.custom_reference_sales_order) {
 
@@ -178,20 +242,20 @@ frappe.ui.form.on("Sales Order", {
                 doctype: "Sales Order",
                 name: frm.doc.custom_reference_sales_order
             },
-            callback: function(r) {
+            callback: function (r) {
 
                 if (r.message) {
 
                     // Clear existing rows
                     frm.clear_table("custom_repair_item_table");
 
-                    r.message.items.forEach(function(item) {
+                    r.message.items.forEach(function (item) {
 
                         frappe.db.get_value(
                             "Item",
                             item.item_code,
                             ["image", "custom_customer_description"],
-                            function(value) {
+                            function (value) {
 
                                 let row = frm.add_child("custom_repair_item_table");
 
@@ -219,162 +283,162 @@ frappe.ui.form.on("Sales Order", {
             }
         });
     },
-    custom_reference_item: async function(frm) {
-    if (!frm.doc.custom_reference_item) return;
+    custom_reference_item: async function (frm) {
+        if (!frm.doc.custom_reference_item) return;
 
-    const has_service_added = await get_item_and_set_service(
-        frm,
-        frm.doc.custom_reference_item
-    );
-    if (has_service_added) {
-        frappe.msgprint(
-            `Added Service Item For Repair Item <b>${frm.doc.custom_reference_item}</b>`
+        const has_service_added = await get_item_and_set_service(
+            frm,
+            frm.doc.custom_reference_item
         );
-    } else {
-        frappe.msgprint(
-            `No Service Item Added For Repair Item <b>${frm.doc.custom_reference_item}</b>`
-        );
-    }
-},
-shipping_address_name: async function (frm) {
-	if (!frm.doc.shipping_address_name) {
-		frm.set_value("custom_shipping_contact_person", "");
-		frm.set_value("custom_shipping_contact_email", "");
-		return;
-	}
+        if (has_service_added) {
+            frappe.msgprint(
+                `Added Service Item For Repair Item <b>${frm.doc.custom_reference_item}</b>`
+            );
+        } else {
+            frappe.msgprint(
+                `No Service Item Added For Repair Item <b>${frm.doc.custom_reference_item}</b>`
+            );
+        }
+    },
+    shipping_address_name: async function (frm) {
+        if (!frm.doc.shipping_address_name) {
+            frm.set_value("custom_shipping_contact_person", "");
+            frm.set_value("custom_shipping_contact_email", "");
+            return;
+        }
 
-	try {
+        try {
 
-        const address = await frappe.db.get_doc(
-			"Address",
-			frm.doc.shipping_address_name
-		);
+            const address = await frappe.db.get_doc(
+                "Address",
+                frm.doc.shipping_address_name
+            );
 
-		console.log("Selected Address:", address);
+            console.log("Selected Address:", address);
 
-		const party_link = address.links?.find((link) =>
-			["Customer", "Supplier"].includes(link.link_doctype)
-		);
-
-
-		const shipping_contacts = await frappe.db.get_list("Contact", {
-			filters: {
-				custom_is_shipping_contact: 1,
-			},
-			fields: [
-				"name",
-				"first_name",
-				"last_name",
-				"email_id",
-				"phone",
-				"mobile_no",
-			],
-		});
+            const party_link = address.links?.find((link) =>
+                ["Customer", "Supplier"].includes(link.link_doctype)
+            );
 
 
-
-		for (const contact of shipping_contacts) {
-			const contact_doc = await frappe.db.get_doc(
-				"Contact",
-				contact.name
-			);
-
-			const is_linked = contact_doc.links?.some(
-				(link) =>
-					link.link_doctype === party_link.link_doctype &&
-					link.link_name === party_link.link_name
-			);
-
-			if (is_linked) {
-
-				await frm.set_value(
-					"custom_shipping_contact_person",
-					contact_doc.name
-				);
-
-				await frm.set_value(
-					"custom_shipping_contact_email",
-					contact_doc.email_id || ""
-				);
+            const shipping_contacts = await frappe.db.get_list("Contact", {
+                filters: {
+                    custom_is_shipping_contact: 1,
+                },
+                fields: [
+                    "name",
+                    "first_name",
+                    "last_name",
+                    "email_id",
+                    "phone",
+                    "mobile_no",
+                ],
+            });
 
 
-				return;
-			}
-		}
+
+            for (const contact of shipping_contacts) {
+                const contact_doc = await frappe.db.get_doc(
+                    "Contact",
+                    contact.name
+                );
+
+                const is_linked = contact_doc.links?.some(
+                    (link) =>
+                        link.link_doctype === party_link.link_doctype &&
+                        link.link_name === party_link.link_name
+                );
+
+                if (is_linked) {
+
+                    await frm.set_value(
+                        "custom_shipping_contact_person",
+                        contact_doc.name
+                    );
+
+                    await frm.set_value(
+                        "custom_shipping_contact_email",
+                        contact_doc.email_id || ""
+                    );
 
 
-	} catch (error) {
-		console.error("Error fetching Shipping Contact:", error);
-	}
-},
-    
+                    return;
+                }
+            }
+
+
+        } catch (error) {
+            console.error("Error fetching Shipping Contact:", error);
+        }
+    },
+
 });
 
 frappe.ui.form.on("Repairs Traveler Item", {
     repair_item_code(frm) {
-        if(frm.doc.custom_is_repair){
-        // frm.clear_table("items");
+        if (frm.doc.custom_is_repair) {
+            // frm.clear_table("items");
 
-        let promises = [];
+            let promises = [];
 
-        (frm.doc.custom_repair_item_table || []).forEach(repair_row => {
+            (frm.doc.custom_repair_item_table || []).forEach(repair_row => {
 
-            if (!repair_row.repair_item_code) return;
+                if (!repair_row.repair_item_code) return;
 
-            promises.push(
-                frappe.db.get_doc("Item", repair_row.repair_item_code).then(item => {
+                promises.push(
+                    frappe.db.get_doc("Item", repair_row.repair_item_code).then(item => {
 
-                    (item.custom_item_wise_services || []).forEach(service => {
+                        (item.custom_item_wise_services || []).forEach(service => {
 
-                        let existing = frm.doc.items.find(
-                            d => d.item_code === service.service_items
-                        );
-
-                        if (existing) {
-                            existing.qty += repair_row.quantity || 1;
-                        } else {
-                            let so_item = frm.add_child("items");
-                            so_item.item_code = service.service_items;
-                            so_item.qty = repair_row.quantity || 1;
-
-                            // Fetch Item description
-                            frappe.db.get_value(
-                                "Item",
-                                service.service_items,
-                                ["item_name", "description","stock_uom"],
-                                (r) => {
-                                    frappe.model.set_value(
-                                        so_item.doctype,
-                                        so_item.name,
-                                        "item_name",
-                                        r.item_name
-                                    );
-                            
-                                    frappe.model.set_value(
-                                        so_item.doctype,
-                                        so_item.name,
-                                        "description",
-                                        r.description
-                                    );
-                                    frappe.model.set_value(
-                                        so_item.doctype,
-                                        so_item.name,
-                                        "uom",
-                                        r.stock_uom
-                                    );
-                                    
-                                }
+                            let existing = frm.doc.items.find(
+                                d => d.item_code === service.service_items
                             );
-                        }
-                    });
-                })
-            );
-        });
 
-        Promise.all(promises).then(() => {
-            frm.refresh_field("items");
-        });
-    }
+                            if (existing) {
+                                existing.qty += repair_row.quantity || 1;
+                            } else {
+                                let so_item = frm.add_child("items");
+                                so_item.item_code = service.service_items;
+                                so_item.qty = repair_row.quantity || 1;
+
+                                // Fetch Item description
+                                frappe.db.get_value(
+                                    "Item",
+                                    service.service_items,
+                                    ["item_name", "description", "stock_uom"],
+                                    (r) => {
+                                        frappe.model.set_value(
+                                            so_item.doctype,
+                                            so_item.name,
+                                            "item_name",
+                                            r.item_name
+                                        );
+
+                                        frappe.model.set_value(
+                                            so_item.doctype,
+                                            so_item.name,
+                                            "description",
+                                            r.description
+                                        );
+                                        frappe.model.set_value(
+                                            so_item.doctype,
+                                            so_item.name,
+                                            "uom",
+                                            r.stock_uom
+                                        );
+
+                                    }
+                                );
+                            }
+                        });
+                    })
+                );
+            });
+
+            Promise.all(promises).then(() => {
+                frm.refresh_field("items");
+            });
+        }
     }
 });
 
