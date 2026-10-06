@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_bulk_edit": 1,
  "allow_rename": 1,
  "creation": "2026-05-23 11:19:40.111399",
  "doctype": "DocType",
@@ -9,6 +10,7 @@
   "repair_item_code",
   "quantity",
   "accepted_qty",
+  "description",
   "repair_notes",
   "image",
   "image_view"
@@ -50,13 +52,21 @@
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Accepted Qty"
+  },
+  {
+   "fetch_from": "repair_item_code.description",
+   "fetch_if_empty": 1,
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Description"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-21 02:11:14.577605",
+ "modified": "2026-10-05 21:34:21.933247",
  "modified_by": "Administrator",
  "module": "Sunbadge",
  "name": "Repairs Traveler Item",
